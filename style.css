@@ -1,0 +1,550 @@
+/* =============================================
+   CONQUÊTE DES TERRITOIRES — style.css
+   Thème : militaire sombre / terminal de guerre
+   ============================================= */
+
+/* ---------- 0. IMPORTS & VARIABLES ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  /* Palette principale */
+  --bg-deep:        #0a0d0f;
+  --bg-panel:       #111518;
+  --bg-grid:        #0d1214;
+  --border-dim:     #1f2c2e;
+  --border-glow:    #2a4a3a;
+
+  /* Joueurs */
+  --j1-primary:     #2ecc8a;   /* vert émeraude */
+  --j1-zone:        #0e2d1e;
+  --j1-border:      #1a5c36;
+  --j2-primary:     #e05c6a;   /* rouge corail */
+  --j2-zone:        #2d0e12;
+  --j2-border:      #5c1a22;
+
+  /* Cases spéciales */
+  --neutral:        #1a2226;
+  --bonus-atk:      #3a2e0a;
+  --bonus-atk-text: #c9a227;
+  --bonus-def:      #0a1e2d;
+  --bonus-def-text: #2e86c9;
+  --piege:          #1e0a2d;
+  --piege-text:     #9b4dc9;
+  --fort:           #1a1000;
+  --fort-text:      #e8a020;
+
+  /* Texte */
+  --text-primary:   #d4e8df;
+  --text-dim:       #5a7a6a;
+  --text-gold:      #f0c040;
+
+  /* Typographie */
+  --font-display:   'Rajdhani', sans-serif;
+  --font-mono:      'Share Tech Mono', monospace;
+
+  /* Espacements */
+  --panel-w:        280px;
+  --header-h:       60px;
+  --log-h:          48px;
+  --cell-size:      64px;
+  --gap:            2px;
+}
+
+/* ---------- 1. RESET & BASE ---------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 15px;
+  overflow: hidden; /* pas de scroll — tout doit tenir à l'écran */
+}
+
+/* Effet de bruit subtil sur tout le fond */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- 2. HEADER ---------- */
+header {
+  position: relative;
+  z-index: 10;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+header h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--j1-primary);
+  text-shadow: 0 0 18px rgba(46,204,138,0.4);
+}
+
+#game-status {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+
+#current-phase {
+  display: inline-block;
+  padding: 4px 14px;
+  border: 1px solid var(--text-gold);
+  color: var(--text-gold);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+}
+
+#turn-counter {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+/* ---------- 3. LAYOUT PRINCIPAL ---------- */
+.game_container {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--panel-w) 1fr var(--panel-w);
+  grid-template-rows: 1fr;
+  height: calc(100vh - var(--header-h) - var(--log-h));
+  gap: 0;
+}
+
+/* ---------- 4. PANNEAUX JOUEURS ---------- */
+aside {
+  background: var(--bg-panel);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.info_jouergauche {
+  border-right: 1px solid var(--border-glow);
+}
+
+.info_jouerdroit {
+  border-left: 1px solid var(--border-dim);
+}
+
+/* Titres joueurs */
+.player-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  padding-bottom: 10px;
+  border-bottom: 1px solid currentColor;
+}
+
+.info_jouergauche .player-title { color: var(--j1-primary); }
+.info_jouerdroit  .player-title { color: var(--j2-primary); }
+
+/* Stats (or, cases, unités) */
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  line-height: 1.1;
+}
+
+/* Liste des unités dans le panneau */
+.unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.info_jouergauche .unit-item { border-left: 2px solid var(--j1-border); }
+.info_jouerdroit  .unit-item { border-left: 2px solid var(--j2-border); }
+
+.unit-count {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+/* Bouton Acheter */
+.btn-acheter {
+  margin-top: auto;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.btn-acheter:hover {
+  border-color: var(--text-gold);
+  color: var(--text-gold);
+  background: rgba(240,192,64,0.05);
+}
+
+/* ---------- 5. SECTION GRILLE ---------- */
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--bg-grid);
+  position: relative;
+}
+
+/* Wrapper avec coordonnées */
+.grid-wrapper {
+  display: grid;
+  grid-template-columns: 24px repeat(8, var(--cell-size));
+  grid-template-rows: 24px repeat(8, var(--cell-size));
+  gap: var(--gap);
+}
+
+/* Labels de colonnes (A–H) et de lignes (0–7) */
+.coord-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+/* ---------- 6. GRILLE CSS ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, var(--cell-size));
+  grid-template-rows: repeat(8, var(--cell-size));
+  gap: var(--gap);
+  border: 1px solid var(--border-dim);
+}
+
+/* ---------- 7. CASES (CELLS) ---------- */
+.cell {
+  position: relative;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: filter 0.15s;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.cell:hover {
+  filter: brightness(1.35);
+  z-index: 2;
+}
+
+/* --- Types de cases --- */
+.cell.neutral      { background: var(--neutral); }
+.cell.zone-j1      { background: var(--j1-zone); border: 1px solid var(--j1-border); }
+.cell.zone-j2      { background: var(--j2-zone); border: 1px solid var(--j2-border); }
+.cell.bonus-atk    { background: var(--bonus-atk); }
+.cell.bonus-def    { background: var(--bonus-def); }
+.cell.piege        { background: var(--piege); }
+.cell.fort         { background: var(--fort); }
+
+/* Badge texte dans la case (ATK / DEF / TRP…) */
+.cell-badge {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.cell.bonus-atk .cell-badge { color: var(--bonus-atk-text); }
+.cell.bonus-def .cell-badge { color: var(--bonus-def-text); }
+.cell.piege     .cell-badge { color: var(--piege-text); }
+.cell.fort      .cell-badge { color: var(--fort-text); }
+
+/* ---------- 8. UNITÉS SUR LA GRILLE ---------- */
+.unit-token {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: pointer;
+  position: relative;
+  z-index: 3;
+  transition: transform 0.1s, box-shadow 0.1s;
+  user-select: none;
+}
+
+.unit-token:hover {
+  transform: scale(1.12);
+}
+
+/* Couleurs selon le propriétaire */
+.unit-token.player-1 {
+  background: var(--j1-primary);
+  color: var(--bg-deep);
+  box-shadow: 0 0 8px rgba(46,204,138,0.5);
+}
+
+.unit-token.player-2 {
+  background: var(--j2-primary);
+  color: var(--bg-deep);
+  box-shadow: 0 0 8px rgba(224,92,106,0.5);
+}
+
+/* Sélection active */
+.unit-token.selected {
+  outline: 2px solid var(--text-gold);
+  outline-offset: 2px;
+  animation: pulse-select 1s ease-in-out infinite;
+}
+
+@keyframes pulse-select {
+  0%, 100% { box-shadow: 0 0 6px var(--text-gold); }
+  50%       { box-shadow: 0 0 16px var(--text-gold); }
+}
+
+/* Posture défense */
+.unit-token.defending::after {
+  content: '🛡';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 0.55rem;
+  background: var(--bg-deep);
+  border-radius: 50%;
+  padding: 1px;
+}
+
+/* Cases accessibles (mouvement possible) */
+.cell.reachable {
+  outline: 2px solid rgba(46,204,138,0.5);
+  outline-offset: -2px;
+}
+
+.cell.reachable::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(46,204,138,0.08);
+}
+
+/* Case cible d'attaque */
+.cell.attackable {
+  outline: 2px solid rgba(224,92,106,0.6);
+  outline-offset: -2px;
+}
+
+.cell.attackable::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(224,92,106,0.08);
+}
+
+/* ---------- 9. BARRE DE LOG ---------- */
+#log-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--log-h);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 20;
+}
+
+#log-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  flex-shrink: 0;
+}
+
+#log-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--j1-primary);
+}
+
+/* ---------- 10. LÉGENDE ---------- */
+#legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+
+.legend-swatch.sw-j1      { background: var(--j1-zone);   border-color: var(--j1-border); }
+.legend-swatch.sw-j2      { background: var(--j2-zone);   border-color: var(--j2-border); }
+.legend-swatch.sw-neutral { background: var(--neutral); }
+.legend-swatch.sw-atk     { background: var(--bonus-atk); border-color: var(--bonus-atk-text); }
+.legend-swatch.sw-def     { background: var(--bonus-def); border-color: var(--bonus-def-text); }
+.legend-swatch.sw-piege   { background: var(--piege);     border-color: var(--piege-text); }
+
+/* ---------- 11. MODAL ACHAT (placeholder) ---------- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glow);
+  padding: 28px;
+  width: 380px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  margin-bottom: 20px;
+  color: var(--text-gold);
+}
+
+.shop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border-dim);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.shop-item:hover {
+  border-color: var(--j1-primary);
+  background: rgba(46,204,138,0.05);
+}
+
+.shop-item-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.shop-item-cost {
+  font-family: var(--font-mono);
+  color: var(--text-gold);
+  font-size: 0.8rem;
+}
+
+.modal-close {
+  margin-top: 16px;
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.modal-close:hover {
+  border-color: var(--j2-primary);
+  color: var(--j2-primary);
+}
+
+/* ---------- 12. SCROLLBAR CUSTOM ---------- */
+::-webkit-scrollbar        { width: 4px; }
+::-webkit-scrollbar-track  { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb  { background: var(--border-glow); border-radius: 2px; }
+
+/* ---------- 13. UTILITAIRES ---------- */
+.hidden { display: none !important; }
+.text-j1 { color: var(--j1-primary); }
+.text-j2 { color: var(--j2-primary); }
+.text-gold { color: var(--text-gold); }
