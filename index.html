@@ -5,42 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conquête des Territoires</title>
     <link rel="stylesheet" href="style.css">
-    <script></script>
 </head>
-
 <body>
 
- <header>
+    <header>
         <h1>CONQUÊTE</h1>
-        <!-- Zone pour afficher la phase actuelle  -->
+        <!-- Zone pour afficher la phase actuelle (ex: Placement, Revenus...) -->
         <div id="game-status">PHASE : <span id="current-phase">PLACEMENT</span></div>
         <div id="turn-counter">Tour 0</div>
- </header>
+    </header>
 
- <main class="game_container">
-         <!-- Zone pour afficher info joeur1  -->
-        <aside class="info_jouergauche">
-
-        </aside>
-         <!-- Zone pour afficher info joeur2  -->
-        <aside class="info_jouerdroit">
-
-        </aside> 
-         <!-- Zone du grid  -->
-        <section class="grid-container">
-            
-            <div class="grid">
-
+    <main class="game-container">
+        <!-- Panneau Joueur 1 (Gauche) -->
+        <aside id="player1-panel" class="player-panel">
+            <h2>JOUEUR 1</h2>
+            <div class="stats">
+                <p>OR : <span id="p1-gold">50</span></p>
+                <p>CASES : <span id="p1-cases">0</span></p>
             </div>
+            <div id="p1-units-list" class="units-display">
+                <!-- Liste des unités possédées -->
+            </div>
+            <button id="p1-buy-btn" class="buy-btn">+ ACHETER</button>
+        </aside>
 
+        <!-- Grille de Jeu (Centre) -->
+        <section id="grid-container">
+            <div id="grid">
+                <!-- Les 64 cases seront générées ici par JS ou écrites à la main pour le test -->
+                <!-- Exemple d'une case : <div class="tile tile-neutre" data-index="0"></div> -->
+            </div>
         </section>
-        
- </main>
 
+        <!-- Panneau Joueur 2 (Droite) -->
+        <aside id="player2-panel" class="player-panel">
+            <h2>JOUEUR 2</h2>
+            <div class="stats">
+                <p>OR : <span id="p2-gold">50</span></p>
+                <p>CASES : <span id="p2-cases">0</span></p>
+            </div>
+            <div id="p2-units-list" class="units-display">
+                <!-- Liste des unités possédées -->
+            </div>
+            <button id="p2-buy-btn" class="buy-btn">+ ACHETER</button>
+        </aside>
+    </main>
 
+    <!-- Zone de Log (Bas) -->
+    <footer>
+        <div id="log-console">
+            <p>LOG : Bienvenue dans Conquête des Territoires. Préparez-vous au combat !</p>
+        </div>
+        <div id="legend">
+            <!-- Légende des couleurs des cases (Bonus, Pièges, etc.) -->
+        </div>
+    </footer>
 
-
-
-
+    <script src="script.js"></script>
 </body>
 </html>
