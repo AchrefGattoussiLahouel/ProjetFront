@@ -548,3 +548,18 @@ aside {
 .text-j1 { color: var(--j1-primary); }
 .text-j2 { color: var(--j2-primary); }
 .text-gold { color: var(--text-gold); }
+
+
+/* Fix alignement grid-wrapper */
+.grid-wrapper {
+  display: grid;
+  grid-template-columns: 24px repeat(8, var(--cell-size));
+  grid-template-rows: 24px repeat(8, var(--cell-size));
+  gap: var(--gap);
+}
+
+
+/* enlever display:grid de .grid si utilisé ici */
+.grid {
+  display: contents;
+}
