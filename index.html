@@ -2,65 +2,187 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conquête des Territoires</title>
+    <title>Conquête</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <h1>CONQUÊTE</h1>
-        <!-- Zone pour afficher la phase actuelle (ex: Placement, Revenus...) -->
-        <div id="game-status">PHASE : <span id="current-phase">PLACEMENT</span></div>
-        <div id="turn-counter">Tour 0</div>
-    </header>
+<header>
+    <h1>CONQUÊTE</h1>
+    <div id="game-status">PHASE : <span id="current-phase">PLACEMENT</span></div>
+    <div id="turn-counter">Tour 1</div>
+</header>
 
-    <main class="game-container">
-        <!-- Panneau Joueur 1 (Gauche) -->
-        <aside id="player1-panel" class="player-panel">
-            <h2>JOUEUR 1</h2>
-            <div class="stats">
-                <p>OR : <span id="p1-gold">50</span></p>
-                <p>CASES : <span id="p1-cases">0</span></p>
-            </div>
-            <div id="p1-units-list" class="units-display">
-                <!-- Liste des unités possédées -->
-            </div>
-            <button id="p1-buy-btn" class="buy-btn">+ ACHETER</button>
-        </aside>
+<main class="game_container">
 
-        <!-- Grille de Jeu (Centre) -->
-        <section id="grid-container">
-            <div id="grid">
-                <!-- Les 64 cases seront générées ici par JS ou écrites à la main pour le test -->
-                <!-- Exemple d'une case : <div class="tile tile-neutre" data-index="0"></div> -->
-            </div>
-        </section>
+    <!-- JOUEUR 1 -->
+    <aside class="info_jouergauche">
+        <div class="player-title">JOUEUR 1</div>
 
-        <!-- Panneau Joueur 2 (Droite) -->
-        <aside id="player2-panel" class="player-panel">
-            <h2>JOUEUR 2</h2>
-            <div class="stats">
-                <p>OR : <span id="p2-gold">50</span></p>
-                <p>CASES : <span id="p2-cases">0</span></p>
-            </div>
-            <div id="p2-units-list" class="units-display">
-                <!-- Liste des unités possédées -->
-            </div>
-            <button id="p2-buy-btn" class="buy-btn">+ ACHETER</button>
-        </aside>
-    </main>
-
-    <!-- Zone de Log (Bas) -->
-    <footer>
-        <div id="log-console">
-            <p>LOG : Bienvenue dans Conquête des Territoires. Préparez-vous au combat !</p>
+        <div>
+            <div class="stat-label">OR</div>
+            <div class="stat-value">100</div>
         </div>
-        <div id="legend">
-            <!-- Légende des couleurs des cases (Bonus, Pièges, etc.) -->
-        </div>
-    </footer>
 
+        <div>
+            <div class="stat-label">CASES</div>
+            <div class="stat-value">4</div>
+        </div>
+
+        <div class="unit-list">
+            <div class="unit-item">
+                <span>Infanterie</span>
+                <span class="unit-count">x2</span>
+            </div>
+            <div class="unit-item">
+                <span>Tank</span>
+                <span class="unit-count">x1</span>
+            </div>
+        </div>
+
+        <button class="btn-acheter">ACHETER</button>
+    </aside>
+
+    <!-- GRILLE -->
+    <section class="grid-container">
+
+        <div class="grid-wrapper">
+
+            <!-- Ligne lettres -->
+            <div></div>
+            <div class="coord-label">A</div>
+            <div class="coord-label">B</div>
+            <div class="coord-label">C</div>
+            <div class="coord-label">D</div>
+            <div class="coord-label">E</div>
+            <div class="coord-label">F</div>
+            <div class="coord-label">G</div>
+            <div class="coord-label">H</div>
+
+            <!-- Grille complète -->
+            <!-- On génère 8 lignes -->
+
+            <!-- LIGNE 0 -->
+            <div class="coord-label">0</div>
+            <div class="cell zone-j1"><div class="unit-token player-1">1</div></div>
+            <div class="cell zone-j1"></div>
+            <div class="cell neutral"></div>
+            <div class="cell bonus-atk"><span class="cell-badge">ATK</span></div>
+            <div class="cell neutral"></div>
+            <div class="cell bonus-def"><span class="cell-badge">DEF</span></div>
+            <div class="cell neutral"></div>
+            <div class="cell zone-j2"><div class="unit-token player-2">1</div></div>
+
+            <!-- LIGNE 1 -->
+            <div class="coord-label">1</div>
+            <div class="cell zone-j1"></div>
+            <div class="cell neutral reachable"></div>
+            <div class="cell piege"><span class="cell-badge">TRP</span></div>
+            <div class="cell neutral"></div>
+            <div class="cell fort"><span class="cell-badge">FRT</span></div>
+            <div class="cell neutral"></div>
+            <div class="cell attackable"></div>
+            <div class="cell zone-j2"></div>
+
+            <!-- LIGNE 2 -->
+            <div class="coord-label">2</div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell bonus-atk"><span class="cell-badge">ATK</span></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+
+            <!-- LIGNE 3 -->
+            <div class="coord-label">3</div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+
+            <!-- LIGNE 4 -->
+            <div class="coord-label">4</div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+
+            <!-- LIGNE 5 -->
+            <div class="coord-label">5</div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+
+            <!-- LIGNE 6 -->
+            <div class="coord-label">6</div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+
+            <!-- LIGNE 7 -->
+            <div class="coord-label">7</div>
+            <div class="cell zone-j2"></div>
+            <div class="cell zone-j2"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell neutral"></div>
+            <div class="cell zone-j1"></div>
+            <div class="cell zone-j1"></div>
+
+        </div>
+
+    </section>
+
+    <!-- JOUEUR 2 -->
+    <aside class="info_jouerdroit">
+        <div class="player-title">JOUEUR 2</div>
+
+        <div>
+            <div class="stat-label">OR</div>
+            <div class="stat-value">100</div>
+        </div>
+
+        <div>
+            <div class="stat-label">CASES</div>
+            <div class="stat-value">4</div>
+        </div>
+
+        <div class="unit-list">
+            <div class="unit-item">
+                <span>Infanterie</span>
+                <span class="unit-count">x2</span>
+            </div>
+            <div class="unit-item">
+                <span>Tank</span>
+                <span class="unit-count">x1</span>
+            </div>
+        </div>
+
+        <button class="btn-acheter">ACHETER</button>
+    </aside>
+
+</main>
     <script src="script.js"></script>
 </body>
 </html>
