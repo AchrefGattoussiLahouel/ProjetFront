@@ -1,28 +1,25 @@
 /* =============================================
    CONQUÊTE DES TERRITOIRES — style.css
-   Thème : militaire sombre / terminal de guerre
+   Responsive fix + polish
    ============================================= */
 
-/* ---------- 0. IMPORTS & VARIABLES ---------- */
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
 
+/* ---------- 0. VARIABLES ---------- */
 :root {
-  /* Palette principale */
   --bg-deep:        #0a0d0f;
   --bg-panel:       #111518;
   --bg-grid:        #0d1214;
   --border-dim:     #1f2c2e;
   --border-glow:    #2a4a3a;
 
-  /* Joueurs */
-  --j1-primary:     #2ecc8a;   /* vert émeraude */
+  --j1-primary:     #2ecc8a;
   --j1-zone:        #0e2d1e;
   --j1-border:      #1a5c36;
-  --j2-primary:     #e05c6a;   /* rouge corail */
+  --j2-primary:     #e05c6a;
   --j2-zone:        #2d0e12;
   --j2-border:      #5c1a22;
 
-  /* Cases spéciales */
   --neutral:        #1a2226;
   --bonus-atk:      #3a2e0a;
   --bonus-atk-text: #c9a227;
@@ -33,24 +30,20 @@
   --fort:           #1a1000;
   --fort-text:      #e8a020;
 
-  /* Texte */
   --text-primary:   #d4e8df;
   --text-dim:       #5a7a6a;
   --text-gold:      #f0c040;
 
-  /* Typographie */
   --font-display:   'Rajdhani', sans-serif;
   --font-mono:      'Share Tech Mono', monospace;
 
-  /* Espacements */
-  --panel-w:        280px;
-  --header-h:       60px;
-  --log-h:          48px;
-  --cell-size:      64px;
-  --gap:            2px;
+  /* Panel width — shrinks on smaller screens via clamp */
+  --panel-w:        clamp(140px, 18vw, 240px);
+  --header-h:       52px;
+  --log-h:          44px;
 }
 
-/* ---------- 1. RESET & BASE ---------- */
+/* ---------- 1. RESET ---------- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -63,15 +56,15 @@ html, body {
   color: var(--text-primary);
   font-family: var(--font-display);
   font-size: 15px;
-  overflow: hidden; /* pas de scroll — tout doit tenir à l'écran */
+  overflow: hidden; /* no scroll — everything fits the viewport */
 }
 
-/* Effet de bruit subtil sur tout le fond */
+/* Subtle noise texture */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
   background-size: 200px;
   pointer-events: none;
   z-index: 0;
@@ -85,116 +78,121 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
+  padding: 0 20px;
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
 }
 
 header h1 {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: clamp(1.1rem, 2.5vw, 1.7rem);
   font-weight: 700;
   letter-spacing: 0.25em;
   color: var(--j1-primary);
-  text-shadow: 0 0 18px rgba(46,204,138,0.4);
+  text-shadow: 0 0 18px rgba(46,204,138,0.35);
 }
 
 #game-status {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: clamp(0.6rem, 1.2vw, 0.75rem);
   letter-spacing: 0.15em;
   color: var(--text-dim);
 }
 
 #current-phase {
   display: inline-block;
-  padding: 4px 14px;
+  padding: 3px 10px;
   border: 1px solid var(--text-gold);
   color: var(--text-gold);
-  font-size: 0.8rem;
+  font-size: clamp(0.6rem, 1.2vw, 0.8rem);
   letter-spacing: 0.2em;
 }
 
 #turn-counter {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: clamp(0.65rem, 1.2vw, 0.85rem);
   color: var(--text-dim);
   letter-spacing: 0.1em;
 }
 
-/* ---------- 3. LAYOUT PRINCIPAL ---------- */
+/* ---------- 3. MAIN LAYOUT ---------- */
+/*
+  The full page height minus header and log bar.
+  3 columns: left panel | grid area | right panel
+*/
 .game_container {
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: var(--panel-w) 1fr var(--panel-w);
-  grid-template-rows: 1fr;
+  /* height = viewport - header - log bar */
   height: calc(100vh - var(--header-h) - var(--log-h));
-  gap: 0;
+  overflow: hidden;
 }
 
-/* ---------- 4. PANNEAUX JOUEURS ---------- */
+/* ---------- 4. PLAYER PANELS ---------- */
 aside {
   background: var(--bg-panel);
-  padding: 24px 20px;
+  padding: clamp(12px, 2vw, 24px) clamp(10px, 1.5vw, 20px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(10px, 1.5vh, 18px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.info_jouergauche {
-  border-right: 1px solid var(--border-glow);
-}
+.info_jouergauche { border-right: 1px solid var(--border-glow); }
+.info_jouerdroit  { border-left:  1px solid var(--border-dim);  }
 
-.info_jouerdroit {
-  border-left: 1px solid var(--border-dim);
-}
-
-/* Titres joueurs */
 .player-title {
-  font-size: 1.3rem;
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
   font-weight: 700;
   letter-spacing: 0.2em;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid currentColor;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .info_jouergauche .player-title { color: var(--j1-primary); }
 .info_jouerdroit  .player-title { color: var(--j2-primary); }
 
-/* Stats (or, cases, unités) */
 .stat-label {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: clamp(0.55rem, 1vw, 0.65rem);
   letter-spacing: 0.2em;
   color: var(--text-dim);
   text-transform: uppercase;
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: clamp(1.3rem, 2.5vw, 2rem);
   font-weight: 700;
   color: var(--text-gold);
   line-height: 1.1;
 }
 
-/* Liste des unités dans le panneau */
 .unit-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .unit-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 10px;
+  padding: clamp(4px, 0.8vh, 8px) clamp(6px, 1vw, 10px);
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-dim);
-  font-size: 0.85rem;
+  font-size: clamp(0.7rem, 1.1vw, 0.85rem);
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .info_jouergauche .unit-item { border-left: 2px solid var(--j1-border); }
@@ -203,22 +201,23 @@ aside {
 .unit-count {
   font-family: var(--font-mono);
   color: var(--text-dim);
-  font-size: 0.8rem;
+  font-size: clamp(0.65rem, 1vw, 0.8rem);
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
-/* Bouton Acheter */
 .btn-acheter {
-  margin-top: auto;
-  padding: 14px;
+  padding: clamp(8px, 1.5vh, 14px);
   background: transparent;
   border: 1px solid var(--text-dim);
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: clamp(0.7rem, 1.1vw, 0.9rem);
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.15em;
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s, background 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-acheter:hover {
@@ -227,127 +226,139 @@ aside {
   background: rgba(240,192,64,0.05);
 }
 
-/* ---------- 5. SECTION GRILLE ---------- */
+/* ---------- 5. GRID SECTION ---------- */
 .grid-container {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
   background: var(--bg-grid);
+  padding: 12px;
+  overflow: hidden;
   position: relative;
 }
 
-/* Wrapper avec coordonnées */
+/*
+  The grid wrapper sizes the grid to fit the available space.
+  We use min() to ensure it never overflows width OR height.
+  
+  Available width  = 100% of grid-container (after panels)
+  Available height = 100% of grid-container
+  We take the smaller of the two to keep the grid square.
+*/
 .grid-wrapper {
-  display: grid;
-  grid-template-columns: 24px repeat(8, var(--cell-size));
-  grid-template-rows: 24px repeat(8, var(--cell-size));
-  gap: var(--gap);
-}
-
-/* Labels de colonnes (A–H) et de lignes (0–7) */
-.coord-label {
+  /* Square: takes the smallest of width or height */
+  width:  min(100%, calc(100vh - var(--header-h) - var(--log-h) - 24px));
+  height: min(100%, calc(100vh - var(--header-h) - var(--log-h) - 24px));
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  letter-spacing: 0.1em;
 }
 
-/* ---------- 6. GRILLE CSS ---------- */
+/* ---------- 6. THE GRID ---------- */
+/*
+  CSS Grid with 8 equal columns and rows.
+  gap: 1px creates thin lines between cells without wasting space.
+  The grid fills the wrapper completely.
+*/
 .grid {
   display: grid;
-  grid-template-columns: repeat(8, var(--cell-size));
-  grid-template-rows: repeat(8, var(--cell-size));
-  gap: var(--gap);
+  grid-template-columns: repeat(var(--grid-size, 8), 1fr);
+  grid-template-rows:    repeat(var(--grid-size, 8), 1fr);
+  width: 100%;
+  height: 100%;
+  gap: 1px; /* thin separator lines — not a big gap */
+  background: var(--border-dim); /* gap color comes from background */
   border: 1px solid var(--border-dim);
 }
 
-/* ---------- 7. CASES (CELLS) ---------- */
+/* ---------- 7. CELLS ---------- */
 .cell {
   position: relative;
-  width: var(--cell-size);
-  height: var(--cell-size);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: filter 0.15s;
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.05em;
+  transition: filter 0.12s;
+  /* No fixed width/height — cells fill their grid track */
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .cell:hover {
-  filter: brightness(1.35);
+  filter: brightness(1.4);
   z-index: 2;
 }
 
-/* --- Types de cases --- */
-.cell.neutral      { background: var(--neutral); }
-.cell.zone-j1      { background: var(--j1-zone); border: 1px solid var(--j1-border); }
-.cell.zone-j2      { background: var(--j2-zone); border: 1px solid var(--j2-border); }
-.cell.bonus-atk    { background: var(--bonus-atk); }
-.cell.bonus-def    { background: var(--bonus-def); }
-.cell.piege        { background: var(--piege); }
-.cell.fort         { background: var(--fort); }
+/* Cell types */
+.cell.neutral   { background: var(--neutral);   }
+.cell.zone-j1   { background: var(--j1-zone);   }
+.cell.zone-j2   { background: var(--j2-zone);   }
+.cell.bonus-atk { background: var(--bonus-atk); }
+.cell.bonus-def { background: var(--bonus-def); }
+.cell.piege     { background: var(--piege);     }
+.cell.fort      { background: var(--fort);      }
 
-/* Badge texte dans la case (ATK / DEF / TRP…) */
+/* Owned cells */
+.cell.owned-j1 { background: var(--j1-zone); outline: 1px solid var(--j1-border); }
+.cell.owned-j2 { background: var(--j2-zone); outline: 1px solid var(--j2-border); }
+
+/* Badge (ATK / DEF / TRP) — scales with cell size using cqw units */
 .cell-badge {
   position: absolute;
-  bottom: 3px;
-  right: 3px;
-  font-size: 0.5rem;
-  letter-spacing: 0.08em;
+  bottom: 4%;
+  right: 5%;
+  font-family: var(--font-mono);
+  font-size: clamp(0.4rem, 1vw, 0.6rem);
   font-weight: 600;
+  letter-spacing: 0.05em;
   opacity: 0.85;
+  pointer-events: none;
 }
 
 .cell.bonus-atk .cell-badge { color: var(--bonus-atk-text); }
 .cell.bonus-def .cell-badge { color: var(--bonus-def-text); }
-.cell.piege     .cell-badge { color: var(--piege-text); }
-.cell.fort      .cell-badge { color: var(--fort-text); }
+.cell.piege     .cell-badge { color: var(--piege-text);     }
+.cell.fort      .cell-badge { color: var(--fort-text);      }
 
-/* ---------- 8. UNITÉS SUR LA GRILLE ---------- */
+/* ---------- 8. UNIT TOKENS ---------- */
+/*
+  Units scale relative to the cell.
+  Using % sizes so they always fit regardless of cell size.
+*/
 .unit-token {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
+  width: 65%;
+  height: 65%;
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: clamp(0.65rem, 1.8vw, 1.1rem);
   font-weight: 700;
-  letter-spacing: 0;
   cursor: pointer;
   position: relative;
   z-index: 3;
   transition: transform 0.1s, box-shadow 0.1s;
   user-select: none;
+  pointer-events: all;
 }
 
-.unit-token:hover {
-  transform: scale(1.12);
-}
+.unit-token:hover { transform: scale(1.1); }
 
-/* Couleurs selon le propriétaire */
 .unit-token.player-1 {
   background: var(--j1-primary);
   color: var(--bg-deep);
-  box-shadow: 0 0 8px rgba(46,204,138,0.5);
+  box-shadow: 0 0 6px rgba(46,204,138,0.5);
 }
 
 .unit-token.player-2 {
   background: var(--j2-primary);
   color: var(--bg-deep);
-  box-shadow: 0 0 8px rgba(224,92,106,0.5);
+  box-shadow: 0 0 6px rgba(224,92,106,0.5);
 }
 
-/* Sélection active */
 .unit-token.selected {
   outline: 2px solid var(--text-gold);
   outline-offset: 2px;
@@ -355,41 +366,37 @@ aside {
 }
 
 @keyframes pulse-select {
-  0%, 100% { box-shadow: 0 0 6px var(--text-gold); }
-  50%       { box-shadow: 0 0 16px var(--text-gold); }
+  0%, 100% { box-shadow: 0 0 4px var(--text-gold); }
+  50%       { box-shadow: 0 0 14px var(--text-gold); }
 }
 
-/* Posture défense */
 .unit-token.defending::after {
   content: '🛡';
   position: absolute;
-  top: -6px;
-  right: -6px;
-  font-size: 0.55rem;
+  top: -5px;
+  right: -5px;
+  font-size: 0.5rem;
   background: var(--bg-deep);
   border-radius: 50%;
-  padding: 1px;
+  line-height: 1;
 }
 
-/* Cases accessibles (mouvement possible) */
+/* Reachable / attackable highlights */
 .cell.reachable {
-  outline: 2px solid rgba(46,204,138,0.5);
+  outline: 2px solid rgba(46,204,138,0.55);
   outline-offset: -2px;
 }
-
 .cell.reachable::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(46,204,138,0.08);
+  background: rgba(46,204,138,0.07);
 }
 
-/* Case cible d'attaque */
 .cell.attackable {
-  outline: 2px solid rgba(224,92,106,0.6);
+  outline: 2px solid rgba(224,92,106,0.65);
   outline-offset: -2px;
 }
-
 .cell.attackable::before {
   content: '';
   position: absolute;
@@ -397,7 +404,7 @@ aside {
   background: rgba(224,92,106,0.08);
 }
 
-/* ---------- 9. BARRE DE LOG ---------- */
+/* ---------- 9. LOG BAR ---------- */
 #log-bar {
   position: fixed;
   bottom: 0;
@@ -408,30 +415,36 @@ aside {
   border-top: 1px solid var(--border-dim);
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  gap: 16px;
+  padding: 0 16px;
+  gap: 14px;
   z-index: 20;
 }
 
 #log-label {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--text-dim);
   letter-spacing: 0.2em;
   flex-shrink: 0;
+  border-right: 1px solid var(--border-dim);
+  padding-right: 14px;
 }
 
 #log-text {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: clamp(0.65rem, 1.2vw, 0.8rem);
   color: var(--j1-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ---------- 10. LÉGENDE ---------- */
+/* ---------- 10. LEGEND ---------- */
 #legend {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: clamp(8px, 1.5vw, 20px);
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -439,17 +452,23 @@ aside {
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-family: var(--font-mono);
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
+  font-size: clamp(0.45rem, 0.9vw, 0.55rem);
+  letter-spacing: 0.08em;
   color: var(--text-dim);
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Hide legend items on very small screens */
+@media (max-width: 900px) {
+  #legend { display: none; }
 }
 
 .legend-swatch {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border: 1px solid rgba(255,255,255,0.1);
   flex-shrink: 0;
 }
@@ -461,35 +480,32 @@ aside {
 .legend-swatch.sw-def     { background: var(--bonus-def); border-color: var(--bonus-def-text); }
 .legend-swatch.sw-piege   { background: var(--piege);     border-color: var(--piege-text); }
 
-/* ---------- 11. MODAL ACHAT (placeholder) ---------- */
+/* ---------- 11. MODAL ---------- */
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.78);
   z-index: 50;
   align-items: center;
   justify-content: center;
 }
-
-.modal-overlay.open {
-  display: flex;
-}
+.modal-overlay.open { display: flex; }
 
 .modal-box {
   background: var(--bg-panel);
   border: 1px solid var(--border-glow);
-  padding: 28px;
-  width: 380px;
+  padding: clamp(16px, 3vw, 28px);
+  width: min(380px, 90vw);
   max-height: 80vh;
   overflow-y: auto;
 }
 
 .modal-title {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 2vw, 1.2rem);
   font-weight: 700;
   letter-spacing: 0.2em;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   color: var(--text-gold);
 }
 
@@ -503,25 +519,15 @@ aside {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-
 .shop-item:hover {
   border-color: var(--j1-primary);
   background: rgba(46,204,138,0.05);
 }
-
-.shop-item-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.shop-item-cost {
-  font-family: var(--font-mono);
-  color: var(--text-gold);
-  font-size: 0.8rem;
-}
+.shop-item-name { font-weight: 600; font-size: 0.9rem; }
+.shop-item-cost { font-family: var(--font-mono); color: var(--text-gold); font-size: 0.8rem; }
 
 .modal-close {
-  margin-top: 16px;
+  margin-top: 14px;
   width: 100%;
   padding: 10px;
   background: transparent;
@@ -532,34 +538,15 @@ aside {
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
 }
+.modal-close:hover { border-color: var(--j2-primary); color: var(--j2-primary); }
 
-.modal-close:hover {
-  border-color: var(--j2-primary);
-  color: var(--j2-primary);
-}
+/* ---------- 12. SCROLLBAR ---------- */
+::-webkit-scrollbar       { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
 
-/* ---------- 12. SCROLLBAR CUSTOM ---------- */
-::-webkit-scrollbar        { width: 4px; }
-::-webkit-scrollbar-track  { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb  { background: var(--border-glow); border-radius: 2px; }
-
-/* ---------- 13. UTILITAIRES ---------- */
-.hidden { display: none !important; }
-.text-j1 { color: var(--j1-primary); }
-.text-j2 { color: var(--j2-primary); }
-.text-gold { color: var(--text-gold); }
-
-
-/* Fix alignement grid-wrapper */
-.grid-wrapper {
-  display: grid;
-  grid-template-columns: 24px repeat(8, var(--cell-size));
-  grid-template-rows: 24px repeat(8, var(--cell-size));
-  gap: var(--gap);
-}
-
-
-/* enlever display:grid de .grid si utilisé ici */
-.grid {
-  display: contents;
-}
+/* ---------- 13. UTILITIES ---------- */
+.hidden     { display: none !important; }
+.text-j1    { color: var(--j1-primary); }
+.text-j2    { color: var(--j2-primary); }
+.text-gold  { color: var(--text-gold); }

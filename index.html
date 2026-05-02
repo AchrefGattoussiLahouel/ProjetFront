@@ -47,109 +47,7 @@
     <section class="grid-container">
 
         <div class="grid-wrapper">
-
-            <!-- Ligne lettres -->
-            <div></div>
-            <div class="coord-label">A</div>
-            <div class="coord-label">B</div>
-            <div class="coord-label">C</div>
-            <div class="coord-label">D</div>
-            <div class="coord-label">E</div>
-            <div class="coord-label">F</div>
-            <div class="coord-label">G</div>
-            <div class="coord-label">H</div>
-
-            <!-- Grille complète -->
-            <!-- On génère 8 lignes -->
-
-            <!-- LIGNE 0 -->
-            <div class="coord-label">0</div>
-            <div class="cell zone-j1"><div class="unit-token player-1">1</div></div>
-            <div class="cell zone-j1"></div>
-            <div class="cell neutral"></div>
-            <div class="cell bonus-atk"><span class="cell-badge">ATK</span></div>
-            <div class="cell neutral"></div>
-            <div class="cell bonus-def"><span class="cell-badge">DEF</span></div>
-            <div class="cell neutral"></div>
-            <div class="cell zone-j2"><div class="unit-token player-2">1</div></div>
-
-            <!-- LIGNE 1 -->
-            <div class="coord-label">1</div>
-            <div class="cell zone-j1"></div>
-            <div class="cell neutral reachable"></div>
-            <div class="cell piege"><span class="cell-badge">TRP</span></div>
-            <div class="cell neutral"></div>
-            <div class="cell fort"><span class="cell-badge">FRT</span></div>
-            <div class="cell neutral"></div>
-            <div class="cell attackable"></div>
-            <div class="cell zone-j2"></div>
-
-            <!-- LIGNE 2 -->
-            <div class="coord-label">2</div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell bonus-atk"><span class="cell-badge">ATK</span></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-
-            <!-- LIGNE 3 -->
-            <div class="coord-label">3</div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-
-            <!-- LIGNE 4 -->
-            <div class="coord-label">4</div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-
-            <!-- LIGNE 5 -->
-            <div class="coord-label">5</div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-
-            <!-- LIGNE 6 -->
-            <div class="coord-label">6</div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-
-            <!-- LIGNE 7 -->
-            <div class="coord-label">7</div>
-            <div class="cell zone-j2"></div>
-            <div class="cell zone-j2"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell neutral"></div>
-            <div class="cell zone-j1"></div>
-            <div class="cell zone-j1"></div>
-
+                <div class="grid" id="grid"></div>
         </div>
 
     </section>
@@ -181,8 +79,21 @@
 
         <button class="btn-acheter">ACHETER</button>
     </aside>
+    <div id="log-bar">
+  <span id="log-label">LOG</span>
+  <span id="log-text">En attente du placement — Joueur 1 commence.</span>
+  <div id="legend">
+    <div class="legend-item"><div class="legend-swatch sw-j1"></div>Zone J1</div>
+    <div class="legend-item"><div class="legend-swatch sw-j2"></div>Zone J2</div>
+    <div class="legend-item"><div class="legend-swatch sw-neutral"></div>Neutre</div>
+    <div class="legend-item"><div class="legend-swatch sw-atk"></div>ATK</div>
+    <div class="legend-item"><div class="legend-swatch sw-def"></div>DEF</div>
+    <div class="legend-item"><div class="legend-swatch sw-piege"></div>Piège</div>
+  </div>
+</div>
+
 
 </main>
-    <script src="script.js"></script>
+    <script src="gameState.js"></script>
 </body>
 </html>
