@@ -1,8 +1,20 @@
-const size = 16;
+export const size = 8;
 
-const gameState = {
-    board: []
+export const gameState = {
+    board: [],
+    units: [],          // all units in the game
+    unitIdCounter: 0,   // increments each time we create a unit
+    currentPlayer: 1,
+    phase: 'placement', // 'placement' | 'buy' | 'movement' | 'action' | 'end'
+    turn: 1,
+    selected: null,     // selected unit id
+    players: [
+        { id:1, gold:50, cells:[], units:[] },
+        { id:2, gold:50, cells:[], units:[] },
+    ]
 };
+
+export function initBoard() {
 
 for (let r = 0; r < size; r++) {
     gameState.board[r] = [];
@@ -12,7 +24,8 @@ for (let r = 0; r < size; r++) {
         let cell = {
             zone: "neutral",
             content: null,
-            used: false
+            used: false,
+            units: []
         };
 
         if (r <= 1) {
@@ -38,52 +51,15 @@ for (let r = 0; r < size; r++) {
         gameState.board[r][c] = cell;
     }
 }
-function render() {
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-
-      document.documentElement.style.setProperty('--grid-size', size);
-
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-
-            const cellData = gameState.board[r][c];
-
-            const cell = document.createElement("div");
-            cell.classList.add("cell");
-            cell.classList.add(cellData.zone);
-            if (cellData.content?.type === "bonus" && cellData.content.subtype === "atk") {
-                cell.classList.add("bonus-atk");
-            } else if (cellData.content?.type === "bonus" && cellData.content.subtype === "def") {
-                cell.classList.add("bonus-def");
-            } else if (cellData.content?.type === "trap") {
-                cell.classList.add("piege");
-            }
-
-            // badges
-            if (cellData.content?.type === "bonus") {
-                if (cellData.content.subtype === "atk") {
-                    cell.innerHTML = "<span class='cell-badge'>ATK</span>";
-                }
-                if (cellData.content.subtype === "def") {
-                    cell.innerHTML = "<span class='cell-badge'  >DEF</span>";
-                }
-            }
-
-            if (cellData.content?.type === "trap") {
-                cell.innerHTML = "<span class='cell-badge'>TRP</span>";
-            }
-
-        cell.addEventListener('click', () => {
-            document.getElementById('log-text').textContent =
-                `Case (${r},${c}) — ${cellData.zone}${cellData.content ? ' — ' + cellData.content.type : ''}`;
-        });
 
 
-            grid.appendChild(cell);
-        }
-    }
 }
 
-
-render()
+export const UNIT_STATS = {
+    Soldat:    { force: 2, move: 1, cost: 10, range: 1, health:50 },
+    Cavalier:  { force: 1, move: 2, cost: 15, range: 1, health:30 },
+    Tank:      { force: 3, move: 1, cost: 25, range: 1, health:150 },
+    Archer:    { force: 1, move: 1, cost: 20, range: 2, health:20 },
+    Bombardier:{ force: 2, move: 1, cost: 40, range: 1, health:10 },
+    Heros:     { force: 4, move: 2, cost: 100, range: 1, health:200 },
+};

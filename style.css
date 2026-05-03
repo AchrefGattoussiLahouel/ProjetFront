@@ -381,6 +381,18 @@ aside {
   line-height: 1;
 }
 
+
+.unit-health-bar {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+    height: 3px;
+    background: #333;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
 /* Reachable / attackable highlights */
 .cell.reachable {
   outline: 2px solid rgba(46,204,138,0.55);

@@ -5,6 +5,20 @@
     <title>Conquête</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
+
+<!-- MARKET MODAL -->
+<div class="modal-overlay" id="modal-market">
+    <div class="modal-box">
+        <div class="modal-title">ACHETER UNE UNITÉ</div>
+        <div id="shop-items"></div>
+        <button class="modal-close" onclick="closeMarket()">FERMER</button>
+    </div>
+</div>
+
+
+
+
 <body>
 
 <header>
@@ -39,7 +53,7 @@
                 <span class="unit-count">x1</span>
             </div>
         </div>
-
+        
         <button class="btn-acheter">ACHETER</button>
     </aside>
 
@@ -94,6 +108,17 @@
 
 
 </main>
-    <script src="gameState.js"></script>
+<script type="module">
+    import { initBoard } from "./gameState.js";
+    import { render } from "./render.js";
+    import { createUnit } from "./units.js";
+
+    initBoard();
+    const tank = createUnit('Tank', 1, 0, 0);   // full health → green bar
+    const soldat = createUnit('Soldat', 2, 7, 7);
+    soldat.health = 10;   // critical → red bar
+
+    render();
+</script>
 </body>
 </html>
