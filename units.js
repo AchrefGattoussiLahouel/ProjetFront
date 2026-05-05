@@ -74,6 +74,8 @@ export function placeInitialUnit(type, player, r, c) {
     if (!canPlaceUnit(player, r, c)) return { ok: false, reason: 'invalid-cell' };
 
     createUnit(type, player, r, c);
+    // record who initiated placement (first placer)
+    if (!gameState.placementStarter) gameState.placementStarter = player;
     const pl = gameState.players[player - 1];
     pl.placed = (pl.placed || 0) + 1;
     // decrement available pieces for player
@@ -89,6 +91,8 @@ export function placeInitialUnit(type, player, r, c) {
     const bothPlaced = gameState.players.every(p => p.placed >= STARTING_UNITS);
     if (bothPlaced) {
         gameState.phase = 'movement';
+        // give movement turn to the player who started the placement
+        gameState.currentPlayer = gameState.placementStarter || player;
     } else {
         gameState.currentPlayer = other;
     }
@@ -103,6 +107,8 @@ function inBounds(r, c) {
 export function getValidMoves(unit) {
     const moves = [];
     if (!unit || !unit.alive) return moves;
+    // if unit already moved this turn, no valid moves
+    if (unit.hasMoved) return moves;
     const max = unit.move || 1;
     // four directions
     const dirs = [ [1,0], [-1,0], [0,1], [0,-1] ];
@@ -156,6 +162,9 @@ export function moveUnit(unitId, destR, destC) {
     if (gameState.currentPlayer !== unit.player) return { ok: false, reason: 'not-your-turn' };
     if (gameState.phase !== 'movement') return { ok: false, reason: 'not-movement' };
 
+    // prevent moving more than once per turn
+    if (unit.hasMoved) return { ok: false, reason: 'already-moved' };
+
     const valid = getValidMoves(unit);
     const ok = valid.some(m => m.r === destR && m.c === destC);
     if (!ok) return { ok: false, reason: 'invalid-move' };
@@ -168,6 +177,9 @@ export function moveUnit(unitId, destR, destC) {
     gameState.board[destR][destC].units.push(unitId);
     unit.row = destR;
     unit.col = destC;
+
+    // mark as moved for this turn
+    unit.hasMoved = true;
 
     // clear selection/highlights but DO NOT end the player's turn automatically
     gameState.selected = null;

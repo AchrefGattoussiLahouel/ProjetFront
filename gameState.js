@@ -10,6 +10,8 @@ export const gameState = {
     selected: null,     // selected unit id
     highlighted: [],    // array of {r,c} for UI highlighting valid moves
     startedRoll: false, // whether the initial dice roll was done
+    // which player started the placement phase (set after initial roll)
+    placementStarter: null,
     tempRolls: { 1: null, 2: null },
     players: [
         { id:1, gold:50, cells:[], units:[], placed:0, availablePieces: { Soldat:3, Cavalier:1, Tank:1 } },

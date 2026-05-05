@@ -3,13 +3,19 @@ import { gameState } from "./gameState.js";
 export async function rollDiceForStart() {
     // legacy single-shot starter — keep but deprioritised
     if (gameState.startedRoll) return { ok: false, reason: 'already-rolled' };
-    let a, b;
-    do {
-        a = Math.floor(Math.random() * 6) + 1;
-        b = Math.floor(Math.random() * 6) + 1;
-    } while (a === b);
+    const a = Math.floor(Math.random() * 6) + 1;
+    const b = Math.floor(Math.random() * 6) + 1;
+    // if tie, let them reroll
+    if (a === b) {
+        const log = document.getElementById('log-text');
+        log.textContent = `Égalité (${a}). Relancer les dés.`;
+        (await import('./render.js')).render();
+        return { ok: true, tie: true, rolls: { j1: a, j2: b } };
+    }
     gameState.currentPlayer = a > b ? 1 : 2;
     gameState.startedRoll = true;
+    // remember who will start placement
+    gameState.placementStarter = gameState.currentPlayer;
     const log = document.getElementById('log-text');
     log.textContent = `Dé: Joueur1=${a} - Joueur2=${b}. Commence: Joueur ${gameState.currentPlayer}`;
     document.getElementById('current-phase').textContent = gameState.phase.toUpperCase();
@@ -60,6 +66,8 @@ export async function rollDice(player) {
         }
         gameState.currentPlayer = a > b ? 1 : 2;
         gameState.startedRoll = true;
+        // remember who will start placement
+        gameState.placementStarter = gameState.currentPlayer;
         log.textContent = `Résultat: J1=${a} - J2=${b}. Commence: Joueur ${gameState.currentPlayer}`;
         const starterEl = document.getElementById('starter-message');
         if (starterEl) starterEl.textContent = `Commence: Joueur ${gameState.currentPlayer}`;

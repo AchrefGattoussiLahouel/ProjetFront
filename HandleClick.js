@@ -34,7 +34,7 @@ export async function handleCellClick(r, c) {
         if (unit && unit.player === gameState.currentPlayer) {
             gameState.selected = unit.id;
             gameState.highlighted = getValidMoves(unit);
-            logEl.textContent = `Unité sélectionnée: ${unit.type} (J${unit.player}). Déplacements calculés.`;
+            logEl.textContent = `Unité sélectionnée: ${unit.type} (J${unit.player}). Déjà déplacée.`;
             (await import('./render.js')).render();
             return;
         }
