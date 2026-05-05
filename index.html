@@ -26,6 +26,9 @@
     <div id="game-status">PHASE : <span id="current-phase">PLACEMENT</span></div>
     <div id="turn-counter">Tour 1</div>
 </header>
+<div id="starter-message" style="padding:8px 20px;color:var(--text-gold)"></div>
+<!-- Controls: roll dice to decide who starts, and end-turn -->
+<!-- per-player controls are inside each aside (see below) -->
 
 <main class="game_container">
 
@@ -54,6 +57,11 @@
             </div>
         </div>
         
+        <div class="player-controls">
+            <button id="btn-roll-1" class="btn-roll" onclick="rollDicePlayer(1)">🎲</button>
+            <span class="roll-value" id="roll-1"></span>
+            <button id="btn-end-1" class="btn-end" onclick="endTurnPlayer(1)">Fin de tour</button>
+        </div>
         <button class="btn-acheter">ACHETER</button>
     </aside>
 
@@ -90,7 +98,11 @@
                 <span class="unit-count">x1</span>
             </div>
         </div>
-
+        <div class="player-controls">
+            <button id="btn-roll-2" class="btn-roll" onclick="rollDicePlayer(2)">🎲</button>
+            <span class="roll-value" id="roll-2"></span>
+            <button id="btn-end-2" class="btn-end" onclick="endTurnPlayer(2)">Fin de tour</button>
+        </div>
         <button class="btn-acheter">ACHETER</button>
     </aside>
     <div id="log-bar">
@@ -109,14 +121,52 @@
 
 </main>
 <script type="module">
-    import { initBoard } from "./gameState.js";
+    import { initBoard, gameState } from "./gameState.js";
     import { render } from "./render.js";
-    import { createUnit } from "./units.js";
-
     initBoard();
-    const tank = createUnit('Tank', 1, 0, 0);   // full health → green bar
-    const soldat = createUnit('Soldat', 2, 7, 7);
-    soldat.health = 10;   // critical → red bar
+    window.selectedUnitType = null;
+
+    window.rollDice = () => import('./gameActions.js').then(m => m.rollDiceForStart());
+    window.endTurn = () => import('./gameActions.js').then(m => m.endTurn());
+
+    window.rollDicePlayer = (p) => import('./gameActions.js').then(m => m.rollDice(p)).then(res => {
+        if (!res) return;
+        if (res && res.roll != null) document.getElementById(`roll-${p}`).textContent = res.roll;
+        if (res && res.reason === 'already-rolled') {
+            const log = document.getElementById('log-text');
+            log.textContent = `Vous avez déjà lancé le dé.`;
+            return;
+        }
+        if (res && res.reason === 'already-started') {
+            const log = document.getElementById('log-text');
+            log.textContent = `Le starter a déjà été déterminé.`;
+            return;
+        }
+        if (res && res.tie) {
+            // clear displays
+            document.getElementById('roll-1').textContent = '';
+            document.getElementById('roll-2').textContent = '';
+            const log = document.getElementById('log-text');
+            log.textContent = `Égalité — relancez les deux dés.`;
+            return;
+        }
+        if (res && res.starter) {
+            const starterEl = document.getElementById('starter-message');
+            if (starterEl) starterEl.textContent = `Commence: Joueur ${res.starter}`;
+        }
+    });
+
+    window.endTurnPlayer = (p) => import('./gameActions.js').then(m => m.endTurnFor(p)).then(res => {
+        if (res && res.ok) {
+            // update active highlight via render
+        } else {
+            const log = document.getElementById('log-text');
+            log.textContent = `Impossible de finir le tour: ${res?.reason || 'erreur'}`;
+        }
+    });
+
+    document.getElementById('current-phase').textContent = gameState.phase.toUpperCase();
+    document.getElementById('turn-counter').textContent = `Tour ${gameState.turn}`;
 
     render();
 </script>

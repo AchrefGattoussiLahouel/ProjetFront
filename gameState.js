@@ -8,11 +8,16 @@ export const gameState = {
     phase: 'placement', // 'placement' | 'buy' | 'movement' | 'action' | 'end'
     turn: 1,
     selected: null,     // selected unit id
+    highlighted: [],    // array of {r,c} for UI highlighting valid moves
+    startedRoll: false, // whether the initial dice roll was done
+    tempRolls: { 1: null, 2: null },
     players: [
-        { id:1, gold:50, cells:[], units:[] },
-        { id:2, gold:50, cells:[], units:[] },
+        { id:1, gold:50, cells:[], units:[], placed:0, availablePieces: { Soldat:3, Cavalier:1, Tank:1 } },
+        { id:2, gold:50, cells:[], units:[], placed:0, availablePieces: { Soldat:3, Cavalier:1, Tank:1 } },
     ]
 };
+
+export const STARTING_UNITS = 5;
 
 export function initBoard() {
 
