@@ -129,32 +129,61 @@
     window.rollDice = () => import('./gameActions.js').then(m => m.rollDiceForStart());
     window.endTurn = () => import('./gameActions.js').then(m => m.endTurn());
 
-    window.rollDicePlayer = (p) => import('./gameActions.js').then(m => m.rollDice(p)).then(res => {
-        if (!res) return;
-        if (res && res.roll != null) document.getElementById(`roll-${p}`).textContent = res.roll;
-        if (res && res.reason === 'already-rolled') {
-            const log = document.getElementById('log-text');
-            log.textContent = `Vous avez déjà lancé le dé.`;
-            return;
+    window.rollDicePlayer = (p) => {
+        // During placement phase we use the initial starter roll; afterwards use per-turn rolls
+        if (gameState.phase === 'placement') {
+            return import('./gameActions.js').then(m => m.rollDice(p)).then(res => {
+                if (!res) return;
+                if (res && res.roll != null) document.getElementById(`roll-${p}`).textContent = res.roll;
+                if (res && res.reason === 'already-rolled') {
+                    const log = document.getElementById('log-text');
+                    log.textContent = `Vous avez déjà lancé le dé.`;
+                    return;
+                }
+                if (res && res.reason === 'already-started') {
+                    const log = document.getElementById('log-text');
+                    log.textContent = `Le starter a déjà été déterminé.`;
+                    return;
+                }
+                if (res && res.tie) {
+                    // clear displays
+                    document.getElementById('roll-1').textContent = '';
+                    document.getElementById('roll-2').textContent = '';
+                    const log = document.getElementById('log-text');
+                    log.textContent = `Égalité — relancez les deux dés.`;
+                    return;
+                }
+                if (res && res.starter) {
+                    const starterEl = document.getElementById('starter-message');
+                    if (starterEl) starterEl.textContent = `Commence: Joueur ${res.starter}`;
+                    const log = document.getElementById('log-text');
+                    log.textContent = `Placement: Commence le Joueur ${res.starter}.`;
+                }
+            });
         }
-        if (res && res.reason === 'already-started') {
-            const log = document.getElementById('log-text');
-            log.textContent = `Le starter a déjà été déterminé.`;
-            return;
-        }
-        if (res && res.tie) {
-            // clear displays
-            document.getElementById('roll-1').textContent = '';
-            document.getElementById('roll-2').textContent = '';
-            const log = document.getElementById('log-text');
-            log.textContent = `Égalité — relancez les deux dés.`;
-            return;
-        }
-        if (res && res.starter) {
-            const starterEl = document.getElementById('starter-message');
-            if (starterEl) starterEl.textContent = `Commence: Joueur ${res.starter}`;
-        }
-    });
+
+        return import('./gameActions.js').then(m => m.rollTurn(p)).then(res => {
+            if (!res) return;
+            if (res && res.roll != null) document.getElementById(`roll-${p}`).textContent = res.roll;
+            if (res && res.reason === 'already-rolled') {
+                const log = document.getElementById('log-text');
+                log.textContent = `Vous avez déjà lancé le dé du tour.`;
+                return;
+            }
+            if (res && res.tie) {
+                // clear displays
+                document.getElementById('roll-1').textContent = '';
+                document.getElementById('roll-2').textContent = '';
+                const log = document.getElementById('log-text');
+                log.textContent = `Égalité — relancez les dés du tour.`;
+                return;
+            }
+            if (res && res.starter) {
+                const log = document.getElementById('log-text');
+                log.textContent = `Résultat du tour: Commence le Joueur ${res.starter}.`;
+            }
+        });
+    };
 
     window.endTurnPlayer = (p) => import('./gameActions.js').then(m => m.endTurnFor(p)).then(res => {
         if (res && res.ok) {

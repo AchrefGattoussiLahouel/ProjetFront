@@ -15,7 +15,11 @@ export async function handleCellClick(r, c) {
 
         const res = placeInitialUnit(type, gameState.currentPlayer, r, c);
         if (!res.ok) {
-            logEl.textContent = `Placement refusé: ${res.reason}`;
+            if (res.reason === 'need-start-rolls') {
+                logEl.textContent = `Début du jeu: les deux joueurs doivent lancer le dé pour déterminer qui commence le placement.`;
+            } else {
+                logEl.textContent = `Placement refusé: ${res.reason}`;
+            }
             return;
         }
 
@@ -44,13 +48,57 @@ export async function handleCellClick(r, c) {
         if (hit && gameState.selected) {
             const res = moveUnit(gameState.selected, r, c);
             if (!res.ok) {
-                logEl.textContent = `Déplacement échoué: ${res.reason}`;
+                const reason = res.reason;
+                if (reason === 'need-turn-rolls') {
+                    logEl.textContent = `Début du tour: les deux joueurs doivent lancer le dé pour déterminer qui commence.`;
+                } else if (reason === 'not-your-turn') {
+                    logEl.textContent = `Ce n'est pas votre tour.`;
+                } else if (reason === 'invalid-move') {
+                    logEl.textContent = `Déplacement invalide.`;
+                } else if (reason === 'already-moved') {
+                    logEl.textContent = `Cette unité a déjà bougé ce tour.`;
+                } else {
+                    logEl.textContent = `Déplacement échoué: ${res.reason}`;
+                }
                 return;
             }
-            logEl.textContent = `Unité déplacée vers (${r},${c}). Vous pouvez continuer à déplacer ou faire Fin de tour.`;
+            // handle combat result if any
+            if (res.combat) {
+                const c = res.combat;
+                const attacker = gameState.units.find(u => u.id === c.attackerId) || {};
+                const defender = gameState.units.find(u => u.id === c.defenderId) || {};
+                if (c.outcome === 'attacker-won') {
+                    logEl.textContent = `Attaque: J${gameState.currentPlayer} — Dé ${c.attackerDie} + Force ${attacker.force || '?'} = ${c.attackerRoll}  | Défenseur — Dé ${c.defenderDie} + Force ${defender.force || '?'} = ${c.defenderRoll}. Résultat: Attaquant gagne — case capturée.`;
+                } else {
+                    logEl.textContent = `Attaque: J${gameState.currentPlayer} — Dé ${c.attackerDie} + Force ${attacker.force || '?'} = ${c.attackerRoll}  | Défenseur — Dé ${c.defenderDie} + Force ${defender.force || '?'} = ${c.defenderRoll}. Résultat: Défenseur tient — unité attaquante éliminée.`;
+                }
+            } else {
+                if (res.capture) {
+                    const from = res.capture.from;
+                    const to = res.capture.to;
+                    const p1 = gameState.players[0].cells.length;
+                    const p2 = gameState.players[1].cells.length;
+                    if (from == null) {
+                        logEl.textContent = `Case (${r},${c}) capturée par Joueur ${to}. Nouveaux compteurs — J1: ${p1} | J2: ${p2}`;
+                    } else {
+                        logEl.textContent = `Case (${r},${c}) reprise par Joueur ${to} (ancien propriétaire: J${from}). Nouveaux compteurs — J1: ${p1} | J2: ${p2}`;
+                    }
+                } else {
+                    logEl.textContent = `Unité déplacée vers (${r},${c}). Vous pouvez continuer à déplacer ou faire Fin de tour.`;
+                }
+            }
+
             document.getElementById('current-phase').textContent = gameState.phase.toUpperCase();
             document.getElementById('turn-counter').textContent = `Tour ${gameState.turn}`;
             (await import('./render.js')).render();
+
+            if (res.winner) {
+                const w = res.winner;
+                logEl.textContent = `JOUEUR ${w} GAGNE !`;
+                // set phase to end
+                gameState.phase = 'end';
+                (await import('./render.js')).render();
+            }
             return;
         }
 

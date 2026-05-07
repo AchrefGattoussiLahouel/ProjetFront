@@ -305,7 +305,8 @@ aside {
   width: 100%;
   height: 100%;
   gap: 1px; /* thin separator lines — not a big gap */
-  background: var(--border-dim); /* gap color comes from background */
+  gap: 2px; /* slightly larger separators for clarity */
+  background: var(--border-glow); /* gap color comes from background */
   border: 1px solid var(--border-dim);
 }
 
@@ -317,6 +318,8 @@ aside {
   justify-content: center;
   cursor: pointer;
   transition: filter 0.12s;
+  /* subtle inner stroke to make cells visually distinct on all backgrounds */
+  outline: 0.5px solid rgba(0,0,0,0.12);
   /* No fixed width/height — cells fill their grid track */
   min-width: 0;
   min-height: 0;

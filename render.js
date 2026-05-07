@@ -15,10 +15,17 @@ export function render() {
          // Ajout des cellules
             const cell = document.createElement("div");
             cell.classList.add("cell");
-            cell.classList.add(cellData.zone);
-            // highlight available moves
-            if (gameState.highlighted.some(h => h.r === r && h.c === c)) {
-                cell.classList.add('highlight');
+            // do not add the zone class here — zones indicate allowed placement
+            // but should not be visually colored until they are captured (owner)
+            // show owner shadow if present
+            if (cellData.owner === 1) cell.classList.add('owned-j1');
+            else if (cellData.owner === 2) cell.classList.add('owned-j2');
+
+            // highlight available moves: reachable vs attackable
+            const hEntry = gameState.highlighted.find(h => h.r === r && h.c === c);
+            if (hEntry) {
+                if (hEntry.attack) cell.classList.add('attackable');
+                else cell.classList.add('reachable');
             }
             if (cellData.content?.type === "bonus" && cellData.content.subtype === "atk") {
                 cell.classList.add("bonus-atk");
@@ -120,22 +127,42 @@ export function render() {
     });
     const ap = document.getElementById('active-player');
     if (ap) ap.textContent = gameState.currentPlayer;
-    // highlight active player's aside and show last roll
+            // highlight active player's aside and show last roll
     const asides = document.querySelectorAll('aside');
     asides.forEach((a, i) => {
         const pid = i + 1;
         if (pid === gameState.currentPlayer) a.classList.add('panel-active');
         else a.classList.remove('panel-active');
         const rv = document.getElementById(`roll-${pid}`);
-        if (rv) rv.textContent = (gameState.tempRolls && gameState.tempRolls[pid]) ? gameState.tempRolls[pid] : '';
         const rollBtn = document.getElementById(`btn-roll-${pid}`);
-        if (rollBtn) {
-            // disable if player already rolled or starter already determined
-            rollBtn.disabled = !!(gameState.tempRolls && gameState.tempRolls[pid] != null) || !!gameState.startedRoll;
-            rollBtn.style.opacity = rollBtn.disabled ? '0.45' : '1';
-            rollBtn.style.cursor = rollBtn.disabled ? 'not-allowed' : 'pointer';
+        if (gameState.phase === 'placement') {
+            if (rv) rv.textContent = (gameState.tempRolls && gameState.tempRolls[pid] != null) ? gameState.tempRolls[pid] : '';
+            if (rollBtn) {
+                rollBtn.disabled = !!(gameState.tempRolls && gameState.tempRolls[pid] != null) || !!gameState.startedRoll;
+                rollBtn.style.opacity = rollBtn.disabled ? '0.45' : '1';
+                rollBtn.style.cursor = rollBtn.disabled ? 'not-allowed' : 'pointer';
+            }
+        } else {
+            if (rv) rv.textContent = (gameState.turnRolls && gameState.turnRolls[pid] != null) ? gameState.turnRolls[pid] : '';
+            if (rollBtn) {
+                rollBtn.disabled = !!(gameState.turnRolls && gameState.turnRolls[pid] != null);
+                rollBtn.style.opacity = rollBtn.disabled ? '0.45' : '1';
+                rollBtn.style.cursor = rollBtn.disabled ? 'not-allowed' : 'pointer';
+            }
         }
     });
+    // update player stats (gold and controlled cases)
+    const asideElems = document.querySelectorAll('aside');
+    asideElems.forEach((a, i) => {
+        const pl = gameState.players[i];
+        const statValues = a.querySelectorAll('.stat-value');
+        if (statValues[0]) statValues[0].textContent = pl.gold != null ? pl.gold : 0;
+        if (statValues[1]) statValues[1].textContent = (pl.cells || []).length;
+    });
     const starterEl = document.getElementById('starter-message');
-    if (starterEl && gameState.startedRoll) starterEl.textContent = `Commence: Joueur ${gameState.currentPlayer}`;
+    if (starterEl) {
+        if (gameState.phase === 'placement' && gameState.startedRoll) starterEl.textContent = `Commence: Joueur ${gameState.currentPlayer}`;
+        else if (gameState.requireTurnRolls) starterEl.textContent = `Début du tour ${gameState.turn} — les deux joueurs doivent lancer le dé.`;
+        else starterEl.textContent = '';
+    }
 }

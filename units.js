@@ -1,4 +1,4 @@
-import { gameState, UNIT_STATS } from "./gameState.js";
+import { gameState, UNIT_STATS, checkVictory } from "./gameState.js";
 import { STARTING_UNITS } from "./gameState.js";
 
 export function createUnit(type, player, row, col) {
@@ -70,6 +70,7 @@ export function canPlaceUnit(player, r, c) {
 
 export function placeInitialUnit(type, player, r, c) {
     if (gameState.phase !== 'placement') return { ok: false, reason: 'not-placement' };
+    if (!gameState.startedRoll) return { ok: false, reason: 'need-start-rolls' };
     if (gameState.currentPlayer !== player) return { ok: false, reason: 'not-your-turn' };
     if (!canPlaceUnit(player, r, c)) return { ok: false, reason: 'invalid-cell' };
 
@@ -93,6 +94,22 @@ export function placeInitialUnit(type, player, r, c) {
         gameState.phase = 'movement';
         // give movement turn to the player who started the placement
         gameState.currentPlayer = gameState.placementStarter || player;
+        // After all placements, ownership is determined only by unit positions:
+        // clear all owners first
+        for (let rr = 0; rr < gameState.board.length; rr++) {
+            for (let cc = 0; cc < gameState.board[rr].length; cc++) {
+                gameState.board[rr][cc].owner = null;
+            }
+        }
+        // reset players' cells lists
+        gameState.players.forEach(p => p.cells = []);
+        // assign ownership to cells that contain units
+        gameState.units.filter(u => u.alive).forEach(u => {
+            const cell = gameState.board[u.row][u.col];
+            cell.owner = u.player;
+            const pl = gameState.players[u.player - 1];
+            if (!pl.cells.some(x => x.r === u.row && x.c === u.col)) pl.cells.push({ r: u.row, c: u.col });
+        });
     } else {
         gameState.currentPlayer = other;
     }
@@ -128,7 +145,11 @@ export function getValidMoves(unit) {
             const destUnits = gameState.board[nr][nc].units || [];
             if (destUnits.length > 0) {
                 const hasEnemy = destUnits.map(id => gameState.units.find(u => u.id === id)).some(u => u && u.player !== unit.player);
-                if (hasEnemy) break; // cannot land on enemy-occupied cell
+                if (hasEnemy) {
+                    // allow attack as a valid move, but cannot continue past enemy
+                    moves.push({ r: nr, c: nc, attack: true });
+                    break;
+                }
             }
             moves.push({ r: nr, c: nc });
             // Cavalier can move 1 or 2; other units only 1 (max)
@@ -162,30 +183,96 @@ export function moveUnit(unitId, destR, destC) {
     if (gameState.currentPlayer !== unit.player) return { ok: false, reason: 'not-your-turn' };
     if (gameState.phase !== 'movement') return { ok: false, reason: 'not-movement' };
 
+    // require per-turn rolls if flagged
+    if (gameState.requireTurnRolls) return { ok: false, reason: 'need-turn-rolls' };
+
     // prevent moving more than once per turn
     if (unit.hasMoved) return { ok: false, reason: 'already-moved' };
 
     const valid = getValidMoves(unit);
     const ok = valid.some(m => m.r === destR && m.c === destC);
     if (!ok) return { ok: false, reason: 'invalid-move' };
+    const destCell = gameState.board[destR][destC];
+    const destUnits = destCell.units || [];
 
-    // remove from old cell
+    // If there is an enemy unit in the destination, resolve combat
+    const enemyUnitId = destUnits.length ? destUnits[destUnits.length - 1] : null;
+    const enemy = enemyUnitId ? gameState.units.find(u => u.id === enemyUnitId && u.alive) : null;
+
+    if (enemy && enemy.player !== unit.player) {
+        // combat: each side rolls 1-6 and adds unit force
+        const roll = () => Math.floor(Math.random() * 6) + 1;
+        const attackerDie = roll();
+        const defenderDie = roll();
+        const attackerRoll = attackerDie + (unit.force || 0);
+        const defenderRoll = defenderDie + (enemy.force || 0);
+
+        if (attackerRoll > defenderRoll) {
+            // attacker wins: remove defender, move attacker into cell, capture territory
+            removeUnit(enemy.id);
+
+            // remove attacker from old cell
+            const oldCell = gameState.board[unit.row][unit.col];
+            oldCell.units = oldCell.units.filter(id => id !== unitId);
+
+            // move attacker
+            destCell.units.push(unitId);
+            unit.row = destR;
+            unit.col = destC;
+            unit.hasMoved = true;
+
+            // capture the cell (set owner)
+            destCell.owner = unit.player;
+
+            // update players' cell lists
+            const attackerPlayer = gameState.players[unit.player - 1];
+            const defenderPlayer = gameState.players[enemy.player - 1];
+            if (!attackerPlayer.cells.some(x => x.r === destR && x.c === destC)) attackerPlayer.cells.push({ r: destR, c: destC });
+            defenderPlayer.cells = defenderPlayer.cells.filter(x => !(x.r === destR && x.c === destC));
+
+            gameState.selected = null;
+            gameState.highlighted = [];
+
+                    const winner = checkVictory();
+            return { ok: true, combat: { outcome: 'attacker-won', attackerDie, defenderDie, attackerRoll, defenderRoll, attackerId: unitId, defenderId: enemy.id }, winner };
+        } else {
+            // defender wins: attacker is removed (eliminated)
+            removeUnit(unit.id);
+
+            const winner = checkVictory();
+            return { ok: true, combat: { outcome: 'defender-won', attackerDie, defenderDie, attackerRoll, defenderRoll, attackerId: unitId, defenderId: enemy.id }, winner };
+        }
+    }
+
+    // No combat: perform normal move
     const oldCell = gameState.board[unit.row][unit.col];
     oldCell.units = oldCell.units.filter(id => id !== unitId);
 
-    // add to new cell
-    gameState.board[destR][destC].units.push(unitId);
+    // record previous owner for capture logic
+    const prevOwner = destCell.owner;
+
+    destCell.units.push(unitId);
     unit.row = destR;
     unit.col = destC;
-
-    // mark as moved for this turn
     unit.hasMoved = true;
 
-    // clear selection/highlights but DO NOT end the player's turn automatically
+    // capture the destination cell if owner differs
+    if (prevOwner !== unit.player) {
+        // remove from previous owner list
+        if (prevOwner != null) {
+            const prevPl = gameState.players[prevOwner - 1];
+            prevPl.cells = prevPl.cells.filter(x => !(x.r === destR && x.c === destC));
+        }
+        // assign to new owner
+        destCell.owner = unit.player;
+        const newPl = gameState.players[unit.player - 1];
+        if (!newPl.cells.some(x => x.r === destR && x.c === destC)) newPl.cells.push({ r: destR, c: destC });
+    }
+
     gameState.selected = null;
     gameState.highlighted = [];
 
-    // Unlimited-movement mode: the player remains active until they explicitly end their turn.
-
-    return { ok: true };
+    const winner = checkVictory();
+    return { ok: true, capture: { from: prevOwner, to: unit.player, r: destR, c: destC }, winner };
 }
+
