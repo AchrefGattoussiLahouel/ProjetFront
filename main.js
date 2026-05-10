@@ -34,7 +34,9 @@ window.showMainMenu = (fullReset = false) => {
     }
     document.getElementById('modal-mainmenu').classList.add('open');
 };
-
+window.closeMainMenu = () => {
+    document.getElementById('modal-mainmenu').classList.remove('open');
+};
 
 window.startNewGame = () => {
     const size = parseInt(document.getElementById('menu-size').value, 10) || 8;
@@ -75,7 +77,8 @@ window.startNewGame = () => {
     initBoard();
     render();
 
-
+    // hide menu
+    closeMainMenu();
 
     // if vs bot, auto-roll for bot to speed up start (bot 'thinks')
     if (vsBot) import('./bot.js').then(m => m.autoRollStart());
