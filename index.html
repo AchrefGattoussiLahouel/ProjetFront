@@ -7,15 +7,6 @@
 </head>
 
 
-<!-- MARKET MODAL -->
-<div class="modal-overlay" id="modal-market">
-    <div class="modal-box">
-        <div class="modal-title">ACHETER UNE UNITÉ</div>
-        <div id="shop-items"></div>
-        <button class="modal-close" onclick="closeMarket()">FERMER</button>
-    </div>
-</div>
-
 
 
 
@@ -27,6 +18,49 @@
     <div><span>TIMER : </span><span id="turn-timer"></span></div>
     <div id="turn-counter">Tour 1</div>
 </header>
+<!-- MARKET MODAL -->
+<div class="modal-overlay" id="modal-market">
+    <div class="modal-box">
+        <div class="modal-title">ACHETER UNE UNITÉ</div>
+        <div id="shop-items"></div>
+        <button class="modal-close" onclick="closeMarket()">FERMER</button>
+    </div>
+</div>
+
+<!-- MAIN MENU MODAL -->
+<div class="modal-overlay" id="modal-mainmenu">
+    <div class="modal-box menu-box">
+        <div class="modal-title">MENU PRINCIPAL</div>
+        <div class="form-row">
+            <label style="flex:1">Dimension de la grille
+                <select id="menu-size">
+                    <option value="6">6 x 6</option>
+                    <option value="7" selected>7 x 7</option>
+                    <option value="8" selected>8 x 8</option>
+                    <option value="9">9 x 9</option>
+                    <option value="10" >10 x 10</option>
+                </select>
+            </label>
+            <label style="flex:1">Mode de jeu
+                <select id="menu-mode">
+                    <option value="pvp" selected>2 Joueurs</option>
+                    <option value="bot">Joueur vs Bot</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="form-row">
+            <label style="flex:1">Timer par tour (secondes)
+                <input id="menu-timer" type="number" min="10" max="300" value="60">
+            </label>
+            <div style="flex:1"></div>
+        </div>
+
+        <div class="menu-actions">
+            <button class="primary" onclick="startNewGame()">Commencer la partie</button>
+        </div>
+    </div>
+</div>
 <div id="starter-message" style="padding:8px 20px;color:var(--text-gold)"></div>
 <!-- Controls: roll dice to decide who starts, and end-turn -->
 <!-- per-player controls are inside each aside (see below) -->
@@ -211,6 +245,18 @@
 
     render();
 </script>-->
+
+<!-- ENDGAME POPUP (invisible until needed) -->
+<div class="modal-overlay" id="modal-end">
+    <div class="modal-box">
+        <div class="modal-title" id="end-title">FIN DE PARTIE</div>
+        <div id="end-body" style="margin-top:6px;margin-bottom:12px;color:var(--text-primary)"></div>
+        <div style="display:flex;gap:8px;">
+            <button class="replay" onclick="replayGame()">Rejouer</button>
+            <button class="menu" onclick="showMainMenu(true)">Menu Principal</button>
+        </div>
+    </div>
+</div>
 
 <script type="module" src="main.js"></script>
 </body>

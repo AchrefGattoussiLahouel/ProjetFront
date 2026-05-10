@@ -1,4 +1,4 @@
-import { gameState, size,UNIT_STATS } from "./gameState.js";
+import { gameState, UNIT_STATS } from "./gameState.js";
 import { createUnit, getPlacementCells } from "./units.js";
 
 
@@ -6,10 +6,11 @@ export function render() {
     const grid = document.getElementById("grid");
     grid.innerHTML = "";
 
-      document.documentElement.style.setProperty('--grid-size', size);
+    const sz = (gameState && gameState.board && gameState.board.length) ? gameState.board.length : 8;
+    document.documentElement.style.setProperty('--grid-size', sz);
 
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
+    for (let r = 0; r < sz; r++) {
+        for (let c = 0; c < sz; c++) {
 
             const cellData = gameState.board[r][c];
          // Ajout des cellules

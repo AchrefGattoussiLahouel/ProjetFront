@@ -29,53 +29,53 @@ export const gameState = {
         { id:2, gold:50, cells:[], units:[], placed:0, availablePieces: { Soldat:3, Cavalier:1, Tank:1 } },
     ]
 };
-export const size = 8;
-export const trap_damage=20;
+// default grid size stored on gameState so it can be updated at runtime
+gameState.size = 8;
+export const trap_damage = 20;
 export const STARTING_UNITS = 5;
 
 export function initBoard() {
+    const sz = (gameState && gameState.size) ? gameState.size : 8;
+    for (let r = 0; r < sz; r++) {
+        gameState.board[r] = [];
 
-for (let r = 0; r < size; r++) {
-    gameState.board[r] = [];
+        for (let c = 0; c < sz; c++) {
 
-    for (let c = 0; c < size; c++) {
+            let cell = {
+                zone: "neutral",
+                owner: null,
+                content: null,
+                used: false,
+                units: []
+            };
 
-        let cell = {
-            zone: "neutral",
-            owner: null,
-            content: null,
-            used: false,
-            units: []
-        };
-
-        if (r <= 1) {
-            // mark as player 1's placement zone, but do NOT mark as captured
-            cell.zone = "zone-j1";
-            // owner remains null so initial captured count is 0
-        }
-        else if (r >= size - 2) {
-            // mark as player 2's placement zone, but do NOT mark as captured
-            cell.zone = "zone-j2";
-            // owner remains null so initial captured count is 0
-        }
-        else {
-            const rand = Math.random();
-
-            if (rand < 0.1) {
-                cell.content = { type: "bonus", subtype: "atk" };
+            if (r <= 1) {
+                // mark as player 1's placement zone, but do NOT mark as captured
+                cell.zone = "zone-j1";
+                // owner remains null so initial captured count is 0
             }
-            else if (rand < 0.2) {
-                cell.content = { type: "bonus", subtype: "def" };
+            else if (r >= sz - 2) {
+                // mark as player 2's placement zone, but do NOT mark as captured
+                cell.zone = "zone-j2";
+                // owner remains null so initial captured count is 0
             }
-            else if (rand < 0.3) {
-                cell.content = { type: "trap" };
-            }
-        }
+            else {
+                const rand = Math.random();
 
-        gameState.board[r][c] = cell;
+                if (rand < 0.1) {
+                    cell.content = { type: "bonus", subtype: "atk" };
+                }
+                else if (rand < 0.2) {
+                    cell.content = { type: "bonus", subtype: "def" };
+                }
+                else if (rand < 0.3) {
+                    cell.content = { type: "trap" };
+                }
+            }
+
+            gameState.board[r][c] = cell;
+        }
     }
-}
-
 
 }
 
@@ -98,7 +98,8 @@ export function checkVictory() {
             else if (owner === 2) counts[2]++;
         }
     }
-    const majority = Math.floor((size*size) / 2) +1;
+    const sz = (gameState && gameState.board && gameState.board.length) ? gameState.board.length : (gameState.size || 8);
+    const majority = Math.floor((sz * sz) / 2) + 1;
     if (counts[1] >= majority) return 1;
     if (counts[2] >= majority) return 2;
 

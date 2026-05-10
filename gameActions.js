@@ -105,16 +105,15 @@ export async function endTurnFor(player) {
         return { ok: false, reason: 'not-your-turn' };
     return endTurn();
 }
-// Timer Logic
-const TURN_DURATION = 60;
+// Timer Logic — duration configurable via gameState.turnDuration (fallback 60s)
 let timer = null;
 export function startTimer(){
     clearInterval(timer);
-    let secondsLeft = TURN_DURATION;
-    const timerEl=document.getElementById('turn-timer');
+    const duration = (gameState && typeof gameState.turnDuration === 'number') ? gameState.turnDuration : 60;
+    let secondsLeft = duration;
+    const timerEl = document.getElementById('turn-timer');
     if (timerEl) timerEl.textContent = secondsLeft;
-    timerEl.textContent=secondsLeft;
-    timer=setInterval(async() => {
+    timer = setInterval(async () => {
         secondsLeft--;
         if (timerEl) timerEl.textContent = secondsLeft;
 
@@ -122,14 +121,12 @@ export function startTimer(){
         if (timerEl) {
             if (secondsLeft <= 10) {
                 timerEl.style.color = '#e05c6a'; // danger
-            }
-            else if (secondsLeft <= TURN_DURATION/2) {
+            } else if (secondsLeft <= duration / 2) {
                 timerEl.style.color = '#f08340'; // warning
-            }
-            else {
+            } else {
                 timerEl.style.color = 'var(--text-gold)';
             }
-}
+        }
 
         // time is up → force end turn
         if (secondsLeft <= 0) {

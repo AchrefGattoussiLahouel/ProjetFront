@@ -567,6 +567,52 @@ aside {
   overflow-y: auto;
 }
 
+/* Menu and end-popup specific styles */
+.modal-box.menu-box {
+  width: min(520px, 92vw);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+.modal-box.end-box {
+  width: min(420px, 92vw);
+  padding: 22px;
+  text-align: center;
+}
+
+.modal-box .form-row { display:flex; gap:10px; align-items:center; }
+.modal-box label { font-family:var(--font-mono); color:var(--text-dim); font-size:0.9rem; }
+.modal-box select, .modal-box input { padding:8px 10px; background:transparent; border:1px solid var(--border-dim); color:var(--text-primary); }
+
+/* Improve dropdown contrast inside modals */
+.modal-box select {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  -webkit-appearance: none;
+  appearance: auto;
+}
+.modal-box option {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+.modal-box select:focus {
+  outline: 2px solid var(--text-gold);
+  box-shadow: 0 6px 18px rgba(240,192,64,0.06);
+}
+
+.menu-actions { display:flex; gap:12px; justify-content:flex-end; }
+.menu-actions .primary { background:linear-gradient(180deg,#f0c04022,#f0c04010); border:1px solid var(--text-gold); color:var(--text-gold); padding:8px 14px; cursor:pointer; }
+.menu-actions .secondary { background:transparent; border:1px solid var(--border-dim); color:var(--text-primary); padding:8px 14px; cursor:pointer; }
+
+.end-title { font-size:1.2rem; color:var(--text-gold); font-weight:800; }
+.end-body { color:var(--text-primary); margin:10px 0 16px; }
+.end-actions { display:flex; gap:10px; justify-content:center; }
+.end-actions button { padding:8px 12px; border-radius:6px; cursor:pointer; }
+.end-actions .replay { background:var(--j1-primary); color:#07110a; border:0; }
+.end-actions .menu { background:transparent; border:1px solid var(--border-dim); color:var(--text-primary); }
+
 .modal-title {
   font-size: clamp(1rem, 2vw, 1.2rem);
   font-weight: 700;
