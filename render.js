@@ -15,6 +15,8 @@ export function render() {
          // Ajout des cellules
             const cell = document.createElement("div");
             cell.classList.add("cell");
+            cell.dataset.r = r;
+            cell.dataset.c = c;
             // do not add the zone class here — zones indicate allowed placement
             // but should not be visually colored until they are captured (owner)
             // show owner shadow if present
@@ -80,6 +82,9 @@ export function render() {
             bar.classList.add("unit-health-bar");
             bar.appendChild(fill);
             token.appendChild(bar);
+            if (unit.isDefending)               token.classList.add('defending');
+            if (unit.hasMoved)                  token.style.opacity = '0.5';
+            if (gameState.selected === unit.id) token.classList.add('selected');
             cell.appendChild(token);
         
        });
@@ -135,34 +140,24 @@ export function render() {
         else a.classList.remove('panel-active');
         const rv = document.getElementById(`roll-${pid}`);
         const rollBtn = document.getElementById(`btn-roll-${pid}`);
-        if (gameState.phase === 'placement') {
-            if (rv) rv.textContent = (gameState.tempRolls && gameState.tempRolls[pid] != null) ? gameState.tempRolls[pid] : '';
-            if (rollBtn) {
-                rollBtn.disabled = !!(gameState.tempRolls && gameState.tempRolls[pid] != null) || !!gameState.startedRoll;
-                rollBtn.style.opacity = rollBtn.disabled ? '0.45' : '1';
-                rollBtn.style.cursor = rollBtn.disabled ? 'not-allowed' : 'pointer';
-            }
-        } else {
-            if (rv) rv.textContent = (gameState.turnRolls && gameState.turnRolls[pid] != null) ? gameState.turnRolls[pid] : '';
-            if (rollBtn) {
-                rollBtn.disabled = !!(gameState.turnRolls && gameState.turnRolls[pid] != null);
-                rollBtn.style.opacity = rollBtn.disabled ? '0.45' : '1';
-                rollBtn.style.cursor = rollBtn.disabled ? 'not-allowed' : 'pointer';
-            }
-        }
+        if (rollBtn) {
+    rollBtn.disabled = gameState.gameStarted;
+    rollBtn.style.opacity  = gameState.gameStarted ? '0.4' : '1';
+    rollBtn.style.cursor   = gameState.gameStarted ? 'not-allowed' : 'pointer';
+    }
     });
     // update player stats (gold and controlled cases)
     const asideElems = document.querySelectorAll('aside');
     asideElems.forEach((a, i) => {
         const pl = gameState.players[i];
         const statValues = a.querySelectorAll('.stat-value');
-        if (statValues[0]) statValues[0].textContent = pl.gold != null ? pl.gold : 0;
-        if (statValues[1]) statValues[1].textContent = (pl.cells || []).length;
+        const casesEl = document.getElementById(`cases-j${i + 1}`);
+        console.log("PLAYER CELLS", gameState.players[0].cells);
+        if (casesEl) casesEl.textContent = (pl.cells || []).length;
     });
     const starterEl = document.getElementById('starter-message');
-    if (starterEl) {
-        if (gameState.phase === 'placement' && gameState.startedRoll) starterEl.textContent = `Commence: Joueur ${gameState.currentPlayer}`;
-        else if (gameState.requireTurnRolls) starterEl.textContent = `Début du tour ${gameState.turn} — les deux joueurs doivent lancer le dé.`;
-        else starterEl.textContent = '';
-    }
+    if (gameState.phase === 'placement' && gameState.gameStarted)
+        starterEl.textContent = `Commence : Joueur ${gameState.currentPlayer}`;
+    else
+        starterEl.textContent = '';
 }

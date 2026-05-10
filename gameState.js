@@ -1,4 +1,4 @@
-export const size = 8;
+
 
 export const gameState = {
     board: [],
@@ -9,7 +9,16 @@ export const gameState = {
     turn: 1,
     selected: null,     // selected unit id
     highlighted: [],    // array of {r,c} for UI highlighting valid moves
-    startedRoll: false, // whether the initial dice roll was done
+    
+    //Starting Rolls
+    startRolls:  { 1: null, 2: null },
+    gameStarted: false,
+    placementStarter: null,
+
+
+    // automatic dice bonus rolled at start of each turn
+    turnBonus: { 1: 0, 2: 0 },
+    //startedRoll: false, // whether the initial dice roll was done
     turnRolls: { 1: null, 2: null },
     requireTurnRolls: false,
     // which player started the placement phase (set after initial roll)
@@ -20,7 +29,8 @@ export const gameState = {
         { id:2, gold:50, cells:[], units:[], placed:0, availablePieces: { Soldat:3, Cavalier:1, Tank:1 } },
     ]
 };
-
+export const size = 8;
+export const trap_damage=20;
 export const STARTING_UNITS = 5;
 
 export function initBoard() {
@@ -70,12 +80,12 @@ for (let r = 0; r < size; r++) {
 }
 
 export const UNIT_STATS = {
-    Soldat:    { force: 2, move: 1, cost: 10, range: 1, health:50 },
-    Cavalier:  { force: 1, move: 2, cost: 15, range: 1, health:30 },
-    Tank:      { force: 3, move: 1, cost: 25, range: 1, health:150 },
-    Archer:    { force: 1, move: 1, cost: 20, range: 2, health:20 },
-    Bombardier:{ force: 2, move: 1, cost: 40, range: 1, health:10 },
-    Heros:     { force: 4, move: 2, cost: 100, range: 1, health:200 },
+    Soldat:    { force:2, move:1, cost:10,  range:1, health:50,  armor:0  },
+    Cavalier:  { force:1, move:2, cost:15,  range:1, health:30,  armor:0  },
+    Tank:      { force:3, move:1, cost:25,  range:1, health:150, armor:20 },
+    Archer:    { force:1, move:1, cost:20,  range:2, health:20,  armor:0  },
+    Bombardier:{ force:2, move:1, cost:40,  range:1, health:60,  armor:0  },
+    Heros:     { force:4, move:2, cost:100, range:1, health:200, armor:10 },
 };
 
 export function checkVictory() {
@@ -88,9 +98,9 @@ export function checkVictory() {
             else if (owner === 2) counts[2]++;
         }
     }
-
-    if (counts[1] >= 33) return 1;
-    if (counts[2] >= 33) return 2;
+    const majority = Math.floor((size*size) / 2) +1;
+    if (counts[1] >= majority) return 1;
+    if (counts[2] >= majority) return 2;
 
     // Check remaining units for each player
     const aliveUnits = gameState.units.filter(u => u.alive);

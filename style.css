@@ -115,7 +115,15 @@ header h1 {
   color: var(--text-dim);
   letter-spacing: 0.1em;
 }
-
+#turn-timer{
+  font-family:var(--font-mono);
+  color:var(--text-gold);
+  font-size:1.4rem;
+  font-weight:700;
+  letter-spacing:0.1em;
+  min-width:2ch;
+  text-align:center
+}
 /* ---------- 3. MAIN LAYOUT ---------- */
 /*
   The full page height minus header and log bar.

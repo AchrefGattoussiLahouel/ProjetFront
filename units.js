@@ -1,5 +1,4 @@
-import { gameState, UNIT_STATS, checkVictory } from "./gameState.js";
-import { STARTING_UNITS } from "./gameState.js";
+import { gameState, UNIT_STATS, checkVictory,STARTING_UNITS,trap_damage } from "./gameState.js";
 
 export function createUnit(type, player, row, col) {
     // 1. get stats from catalogue
@@ -17,11 +16,13 @@ export function createUnit(type, player, row, col) {
         col:         col,
         health:      stats.health,  
         maxHealth:   stats.health,  
+        baseArmor:    stats.armor,
         armor:       stats.armor,
         force:       stats.force,
         move:        stats.move,
         range:       stats.range,
         hasMoved:    false,
+        isDefending: false,
         alive:       true,
     };
 
@@ -44,6 +45,7 @@ export function removeUnit(unitId) {
 
     // mark as dead
     unit.alive = false;
+    unit.isDefending=false;
 
     // remove from board cell
     const cell = gameState.board[unit.row][unit.col];
@@ -70,7 +72,7 @@ export function canPlaceUnit(player, r, c) {
 
 export function placeInitialUnit(type, player, r, c) {
     if (gameState.phase !== 'placement') return { ok: false, reason: 'not-placement' };
-    if (!gameState.startedRoll) return { ok: false, reason: 'need-start-rolls' };
+    if (!gameState.gameStarted) return { ok: false, reason: 'need-start-rolls' };
     if (gameState.currentPlayer !== player) return { ok: false, reason: 'not-your-turn' };
     if (!canPlaceUnit(player, r, c)) return { ok: false, reason: 'invalid-cell' };
 
@@ -131,7 +133,7 @@ export function getValidMoves(unit) {
     const dirs = [ [1,0], [-1,0], [0,1], [0,-1] ];
 
     for (const [dr,dc] of dirs) {
-        for (let step = 1; step <= max; step++) {
+        for (let step = 1; step <= unit.move; step++) {
             const nr = unit.row + dr * step;
             const nc = unit.col + dc * step;
             if (!inBounds(nr,nc)) break;
@@ -144,7 +146,7 @@ export function getValidMoves(unit) {
             // destination: allow landing if empty or contains only friendly units
             const destUnits = gameState.board[nr][nc].units || [];
             if (destUnits.length > 0) {
-                const hasEnemy = destUnits.map(id => gameState.units.find(u => u.id === id)).some(u => u && u.player !== unit.player);
+                const hasEnemy = destUnits.map(id => gameState.units.find(u => u.id === id && u.alive)).some(u => u && u.player !== unit.player);
                 if (hasEnemy) {
                     // allow attack as a valid move, but cannot continue past enemy
                     moves.push({ r: nr, c: nc, attack: true });
@@ -152,9 +154,7 @@ export function getValidMoves(unit) {
                 }
             }
             moves.push({ r: nr, c: nc });
-            // Cavalier can move 1 or 2; other units only 1 (max)
-            if (unit.type === 'Cavalier') continue;
-            else break;
+            
         }
     }
 
@@ -177,6 +177,24 @@ export function getPlacementCells(type, player) {
     return cells;
 }
 
+export function setDefenseMode(unitId){
+    const unit=gameState.units.find(u=> u.id === unitId && u.alive);
+    if (!unit) return { ok: false, reason: 'no-unit' };
+    if (unit.player !== gameState.currentPlayer)
+        return { ok: false, reason: 'not-your-unit' };
+    if (unit.hasMoved)
+        return { ok: false, reason: 'already-moved' };
+    unit.isDefending=true;
+    unit.hasMoved=true;
+    const bonusArmor = gameState.turnBonus[unit.player] || 0;
+    unit.armor = unit.baseArmor + (bonusArmor * 10);
+    document.getElementById('log-text').textContent =
+        `${unit.type} en défense — armure totale : ${unit.armor}`;
+
+    return { ok: true, armor: unit.armor };
+
+}
+
 export function moveUnit(unitId, destR, destC) {
     const unit = gameState.units.find(u => u.id === unitId && u.alive);
     if (!unit) return { ok: false, reason: 'no-unit' };
@@ -184,7 +202,7 @@ export function moveUnit(unitId, destR, destC) {
     if (gameState.phase !== 'movement') return { ok: false, reason: 'not-movement' };
 
     // require per-turn rolls if flagged
-    if (gameState.requireTurnRolls) return { ok: false, reason: 'need-turn-rolls' };
+    //if (gameState.requireTurnRolls) return { ok: false, reason: 'need-turn-rolls' };
 
     // prevent moving more than once per turn
     if (unit.hasMoved) return { ok: false, reason: 'already-moved' };
@@ -196,52 +214,88 @@ export function moveUnit(unitId, destR, destC) {
     const destUnits = destCell.units || [];
 
     // If there is an enemy unit in the destination, resolve combat
-    const enemyUnitId = destUnits.length ? destUnits[destUnits.length - 1] : null;
+    const enemyUnitId = destUnits.find(id => {
+        const u = gameState.units.find(x => x.id === id && x.alive);
+        return u && u.player !== unit.player;
+    });
     const enemy = enemyUnitId ? gameState.units.find(u => u.id === enemyUnitId && u.alive) : null;
-
+    
+    // ── COMBAT ───────────────────────────────────────────────────
     if (enemy && enemy.player !== unit.player) {
-        // combat: each side rolls 1-6 and adds unit force
-        const roll = () => Math.floor(Math.random() * 6) + 1;
+        const roll= () => Math.floor(Math.random() * 6) + 1;
         const attackerDie = roll();
         const defenderDie = roll();
-        const attackerRoll = attackerDie + (unit.force || 0);
-        const defenderRoll = defenderDie + (enemy.force || 0);
 
-        if (attackerRoll > defenderRoll) {
-            // attacker wins: remove defender, move attacker into cell, capture territory
+        const atkBonus  = gameState.turnBonus[unit.player]  || 0;
+        const defBonus  = gameState.turnBonus[enemy.player] || 0;
+
+        const atkCell   = gameState.board[unit.row][unit.col];
+        const defCell   = gameState.board[enemy.row][enemy.col];
+        const cellAtk   = (atkCell.content?.type === 'bonus' && atkCell.content.subtype === 'atk') ? 1 : 0;
+        const cellDef   = (defCell.content?.type === 'bonus' && defCell.content.subtype === 'def') ? 1 : 0;
+
+        const atkTotal  = attackerDie + unit.force  + atkBonus + cellAtk;
+        const defTotal  = defenderDie + enemy.force + defBonus + cellDef;
+        const rawDamage = atkTotal - defTotal;
+
+        document.getElementById('log-text').textContent =
+            `⚔ ATK(${attackerDie}+${unit.force}+${atkBonus}+${cellAtk}=${atkTotal})` +
+            ` vs DEF(${defenderDie}+${enemy.force}+${defBonus}+${cellDef}=${defTotal})` +
+            ` → brut: ${rawDamage}`;
+
+        if (rawDamage > 0) {
+            const finalDamage = enemy.isDefending
+                ? Math.max(0, rawDamage * 10 - enemy.armor)
+                : rawDamage * 10;
+
+            enemy.health -= finalDamage;
+
+            document.getElementById('log-text').textContent +=
+                ` | dégâts: ${finalDamage}` +
+                (enemy.isDefending ? ` (armure ${enemy.armor})` : '') +
+                ` | HP ennemi: ${Math.max(0, enemy.health)}`;
+
+            // counter-attack if defender survived while defending
+            if (enemy.health > 0 && enemy.isDefending) {
+                const counter = Math.floor(finalDamage / 2);
+                unit.health  -= counter;
+                document.getElementById('log-text').textContent +=
+                    ` | Contre: -${counter} HP à ${unit.type} (HP: ${Math.max(0, unit.health)})`;
+
+                if (unit.health <= 0) {
+                    removeUnit(unit.id);
+                    gameState.selected    = null;
+                    gameState.highlighted = [];
+                    return { ok: true, combat: true, winner: checkVictory() };
+                }
+            }
+        }
+
+        if (enemy.health <= 0) {
+            // enemy dies — attacker moves into cell
             removeUnit(enemy.id);
-
-            // remove attacker from old cell
-            const oldCell = gameState.board[unit.row][unit.col];
-            oldCell.units = oldCell.units.filter(id => id !== unitId);
-
-            // move attacker
+            gameState.board[unit.row][unit.col].units =
+                gameState.board[unit.row][unit.col].units.filter(id => id !== unitId);
             destCell.units.push(unitId);
-            unit.row = destR;
-            unit.col = destC;
+            unit.row      = destR;
+            unit.col      = destC;
             unit.hasMoved = true;
-
-            // capture the cell (set owner)
             destCell.owner = unit.player;
 
-            // update players' cell lists
-            const attackerPlayer = gameState.players[unit.player - 1];
-            const defenderPlayer = gameState.players[enemy.player - 1];
-            if (!attackerPlayer.cells.some(x => x.r === destR && x.c === destC)) attackerPlayer.cells.push({ r: destR, c: destC });
-            defenderPlayer.cells = defenderPlayer.cells.filter(x => !(x.r === destR && x.c === destC));
+            const ap = gameState.players[unit.player  - 1];
+            const dp = gameState.players[enemy.player - 1];
+            if (!ap.cells.some(x => x.r === destR && x.c === destC))
+                ap.cells.push({ r: destR, c: destC });
+            dp.cells = dp.cells.filter(x => !(x.r === destR && x.c === destC));
 
-            gameState.selected = null;
-            gameState.highlighted = [];
-
-                    const winner = checkVictory();
-            return { ok: true, combat: { outcome: 'attacker-won', attackerDie, defenderDie, attackerRoll, defenderRoll, attackerId: unitId, defenderId: enemy.id }, winner };
         } else {
-            // defender wins: attacker is removed (eliminated)
-            removeUnit(unit.id);
-
-            const winner = checkVictory();
-            return { ok: true, combat: { outcome: 'defender-won', attackerDie, defenderDie, attackerRoll, defenderRoll, attackerId: unitId, defenderId: enemy.id }, winner };
+            // enemy survived — attacker stays
+            unit.hasMoved = true;
         }
+
+        gameState.selected    = null;
+        gameState.highlighted = [];
+        return { ok: true, combat: true, winner: checkVictory() };
     }
 
     // No combat: perform normal move
@@ -269,10 +323,20 @@ export function moveUnit(unitId, destR, destC) {
         if (!newPl.cells.some(x => x.r === destR && x.c === destC)) newPl.cells.push({ r: destR, c: destC });
     }
 
+   
+    
+    if (destCell.content?.type === 'trap'&& !destCell.content.used) {
+    unit.health -= trap_damage;
+    destCell.content.used = true;
+    
+    document.getElementById('log-text').textContent =
+        `${unit.type} marche sur un piège ! -${trap_damage} HP`;
+    if (unit.health <= 0) removeUnit(unit.id);
+}
     gameState.selected = null;
     gameState.highlighted = [];
-
     const winner = checkVictory();
     return { ok: true, capture: { from: prevOwner, to: unit.player, r: destR, c: destC }, winner };
 }
+
 
