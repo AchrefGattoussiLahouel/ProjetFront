@@ -1,12 +1,13 @@
-import { initBoard, gameState } from "./gameState.js";
+import { gameState } from "./core/gameState.js";
+import { initBoard } from "./core/initBoard.js";
 import { render } from "./render.js";
 
 // expose to HTML onclick
 window.rollStart = (p) =>
-    import('./gameActions.js').then(m => m.rollStartGame(p));
+    import('./actions/dice.js').then(m => m.rollStartGame(p));
 
 window.endTurnPlayer = (p) =>
-    import('./gameActions.js').then(m => m.endTurnFor(p)).then(res => {
+    import('./actions/turn.js').then(m => m.endTurnFor(p)).then(res => {
         if (!res.ok) {
             document.getElementById('log-text').textContent =
                 `Impossible : ${res.reason}`;
@@ -81,7 +82,7 @@ window.startNewGame = () => {
     closeMainMenu();
 
     // if vs bot, auto-roll for bot to speed up start (bot 'thinks')
-    if (vsBot) import('./bot.js').then(m => m.autoRollStart());
+    if (vsBot) import('./bot/bot.js').then(m => m.autoRollStart());
 };
 
 window.showEndPopup = (winner) => {
@@ -114,7 +115,7 @@ document.getElementById('current-phase').textContent = gameState.phase.toUpperCa
 // monitor for bot turns and trigger its actions
 setInterval(() => {
     if (gameState.botEnabled && gameState.gameStarted && gameState.currentPlayer === 2) {
-        import('./bot.js').then(m => m.takeTurn());
+        import('./bot/bot.js').then(m => m.takeTurn());
     }
 }, 700);
 
@@ -122,7 +123,7 @@ setInterval(() => {
 setInterval(() => {
     const modal = document.getElementById('modal-end');
     if (gameState.phase === 'end' && modal && !modal.classList.contains('open')) {
-        import('./gameState.js').then(m => {
+        import('./core/victory.js').then(m => {
             const w = m.checkVictory();
             if (w) window.showEndPopup(w);
         });
