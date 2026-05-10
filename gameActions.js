@@ -91,7 +91,7 @@ export async function endTurn() {
 
     // auto roll bonus for new current player
     autoRollTurnBonus();
-
+    startTimer();
     document.getElementById('turn-counter').textContent  = `Tour ${gameState.turn}`;
     document.getElementById('current-phase').textContent = gameState.phase.toUpperCase();
 
@@ -106,9 +106,45 @@ export async function endTurnFor(player) {
     return endTurn();
 }
 // Timer Logic
-const TurnTimer=60;
-let Timer;
-/*export
-    const TurnEL=getElementById(turn-timer);
-    TurnEL.textContent=secondsleft;
-*/
+const TURN_DURATION = 60;
+let timer = null;
+export function startTimer(){
+    clearInterval(timer);
+    let secondsLeft = TURN_DURATION;
+    const timerEl=document.getElementById('turn-timer');
+    if (timerEl) timerEl.textContent = secondsLeft;
+    timerEl.textContent=secondsLeft;
+    timer=setInterval(async() => {
+        secondsLeft--;
+        if (timerEl) timerEl.textContent = secondsLeft;
+
+        // warning color when low
+        if (timerEl) {
+            if (secondsLeft <= 10) {
+                timerEl.style.color = '#e05c6a'; // danger
+            }
+            else if (secondsLeft <= TURN_DURATION/2) {
+                timerEl.style.color = '#f08340'; // warning
+            }
+            else {
+                timerEl.style.color = 'var(--text-gold)';
+            }
+}
+
+        // time is up → force end turn
+        if (secondsLeft <= 0) {
+            clearInterval(timer);
+            document.getElementById('log-text').textContent =
+                `⏱ Temps écoulé ! Tour de Joueur ${gameState.currentPlayer} terminé.`;
+            await endTurn();
+        }
+    }, 1000);
+}
+
+export function startFirstTurnTimer() {
+    startTimer();
+}
+
+export function startFirstTurnAutoRoll(){
+    autoRollTurnBonus();
+}

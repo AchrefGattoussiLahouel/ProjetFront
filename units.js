@@ -96,6 +96,7 @@ export function placeInitialUnit(type, player, r, c) {
         gameState.phase = 'movement';
         // give movement turn to the player who started the placement
         gameState.currentPlayer = gameState.placementStarter || player;
+        
         // After all placements, ownership is determined only by unit positions:
         // clear all owners first
         for (let rr = 0; rr < gameState.board.length; rr++) {
@@ -112,6 +113,9 @@ export function placeInitialUnit(type, player, r, c) {
             const pl = gameState.players[u.player - 1];
             if (!pl.cells.some(x => x.r === u.row && x.c === u.col)) pl.cells.push({ r: u.row, c: u.col });
         });
+        // start the timer for the first movement turn
+        import('./gameActions.js').then(m => m.startFirstTurnTimer());
+        import('./gameActions.js').then(m=>m.startFirstTurnAutoRoll());
     } else {
         gameState.currentPlayer = other;
     }

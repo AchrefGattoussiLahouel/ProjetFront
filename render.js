@@ -158,6 +158,9 @@ export function render() {
     const starterEl = document.getElementById('starter-message');
     if (gameState.phase === 'placement' && gameState.gameStarted)
         starterEl.textContent = `Commence : Joueur ${gameState.currentPlayer}`;
+    else if (gameState.phase === 'movement' && gameState.gameStarted){
+        starterEl.textContent =  `Tour du Joueur : ${gameState.currentPlayer}`;
+    }
     else
         starterEl.textContent = '';
 }
